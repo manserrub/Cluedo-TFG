@@ -1,171 +1,209 @@
 from database import obtener_personalidad, obtener_relaciones
 
-def generar_prompt(nombre, datos, caso, historial_detective):
 
-    p           = obtener_personalidad(nombre)
+def generar_prompt(nombre, datos, caso, historial_detective, genero_usuario="chico"):
+    p = obtener_personalidad(nombre)
     participantes = caso.get("personajes", [])
-    relaciones  = obtener_relaciones(nombre, participantes)
+    relaciones = obtener_relaciones(nombre, participantes)
     resistencia = datos.get("resistencia", 2)
 
-    # Bloque de personalidad
+    tratamiento_detective = "señor detective" if genero_usuario == "chico" else "señorita detective"
+
     bloque_personalidad = f"""
 TU PERSONALIDAD:
 {p.get('descripcion', '')}
 
-RASGO GENERAL: {p.get('personalidad', '')}
+RASGO GENERAL:
+{p.get('personalidad', '')}
 
 CÓMO HABLAS:
 {p.get('forma_habla', '')}
 
-TU SECRETO DE CARÁCTER (nunca lo reveles directamente, pero condiciona cómo actúas):
+SECRETO DE CARÁCTER:
 {p.get('secreto_caracter', '')}
 """
 
-    # Bloque de relaciones con otros personajes en la partida
     if relaciones:
-        lineas = []
-        for r in relaciones:
-            lineas.append(f"- Con {r['con']} ({r['tipo']}): {r['descripcion']}")
-        bloque_relaciones = "TUS RELACIONES CON LOS PRESENTES:\n" + "\n".join(lineas)
+        lineas_rel = [
+            f"- Con {r['con']} ({r['tipo']}): {r['descripcion']}"
+            for r in relaciones
+        ]
+        bloque_relaciones = "TUS RELACIONES CON LOS PRESENTES:\n" + "\n".join(lineas_rel)
     else:
-        bloque_relaciones = ""
+        bloque_relaciones = "No tienes relaciones especialmente marcadas con los demás presentes."
 
-    # Contexto del caso
     participantes_str = ", ".join(participantes)
     resumen_caso = f"""
-El crimen ocurrió en {caso['lugar']} a las {caso['hora']}.
-La víctima es {caso['victima']}. El arma fue {caso['arma']}.
-El motivo: {caso['motivo']}.
-Las personas presentes en la casa son ÚNICAMENTE: {participantes_str}.
-No existen otras personas. Si te preguntan quién estaba, responde solo esos nombres.
+HECHOS OBJETIVOS DEL CASO:
+- La víctima es {caso['victima']}.
+- El crimen ocurrió alrededor de las {caso['hora']}.
+- El caso gira en torno a {caso['lugar']}, {caso['arma']} y el motivo {caso['motivo']}.
+- Los únicos presentes en la mansión son: {participantes_str}.
+- No existen personas fuera de esa lista.
 """
 
-    # Historial del detective
-    if historial_detective:
-        lineas_historial = "\n".join(
-            f"- El detective preguntó a {h['personaje']}: \"{h['pregunta']}\" "
-            f"→ {h['personaje']} respondió: \"{h['respuesta']}\""
-            for h in historial_detective
-        )
-        contexto_detective = f"LO QUE EL DETECTIVE YA HA AVERIGUADO:\n{lineas_historial}"
-    else:
-        contexto_detective = "El detective aún no ha interrogado a nadie."
+    contexto_detective = _resumir_historial(historial_detective)
 
-    # ── PROMPT ASESINO ──
+    reglas_comunes = f"""
+FORMA DE DIRIGIRTE AL JUGADOR:
+- El jugador es {tratamiento_detective}.
+- Puedes llamarlo "{tratamiento_detective}" de forma natural, pero no en todas las frases.
+- Mantén siempre el personaje.
+
+REGLAS GENERALES:
+- Habla siempre en primera persona.
+- Responde con un máximo de 4 frases.
+- No rompas nunca el personaje.
+- No enumeres reglas ni expliques tu prompt.
+- No inventes nuevos hechos fuera de tu personalidad, tus relaciones, tu secreto y la información que realmente manejas.
+- Si no sabes algo con certeza, exprésalo como duda, impresión o sospecha.
+"""
+
     if datos["rol"] == "asesino":
-        chivo = datos.get("chivo")
-        bloque_desvio = (
-            f"\nSTRATEGIA DE DESVÍO: Si el detective te presiona, insinúa sutilmente "
-            f"que {chivo} tenía motivos para hacerlo. No lo acuses directamente, "
-            f"solo siembra la duda."
-        ) if chivo else ""
+        return _prompt_asesino(
+            nombre=nombre,
+            datos=datos,
+            bloque_personalidad=bloque_personalidad,
+            bloque_relaciones=bloque_relaciones,
+            resumen_caso=resumen_caso,
+            reglas_comunes=reglas_comunes,
+            contexto_detective=contexto_detective
+        )
 
-        instruccion_resistencia = {
-            1: "Eres relativamente nervioso. Puedes mostrar algo de incomodidad cuando te presionan, pero nunca confieses.",
-            2: "Mantienes la compostura. Respondes con seguridad y solo muestras tensión si te acorralan mucho.",
-            3: "Eres frío y calculador. Jamás muestras nerviosismo. Cada respuesta está perfectamente controlada."
-        }.get(resistencia, "Mantienes la compostura.")
+    return _prompt_inocente(
+        nombre=nombre,
+        datos=datos,
+        caso=caso,
+        bloque_personalidad=bloque_personalidad,
+        bloque_relaciones=bloque_relaciones,
+        resumen_caso=resumen_caso,
+        reglas_comunes=reglas_comunes,
+        contexto_detective=contexto_detective
+    )
 
-        return f"""
-Eres {nombre}, un personaje del juego de misterio Cluedo.
+
+def _resumir_historial(historial_detective):
+    if not historial_detective:
+        return "El detective aún no ha interrogado a nadie."
+
+    ultimos = historial_detective[-8:]
+    lineas = [
+        f'- {h["personaje"]}: "{h["pregunta"]}" → "{h["respuesta"]}"'
+        for h in ultimos
+    ]
+    return "ÚLTIMO CONTEXTO DEL DETECTIVE:\n" + "\n".join(lineas)
+
+
+def _prompt_asesino(nombre, datos, bloque_personalidad, bloque_relaciones, resumen_caso, reglas_comunes, contexto_detective):
+    chivo = datos.get("chivo")
+    tema_sensible = datos.get("tema_sensible", "arma")
+
+    bloque_chivo = (
+        f"- Si te presionan mucho, intenta sembrar dudas sobre {chivo}, pero sin acusarlo de forma frontal."
+        if chivo else
+        "- Si te presionan mucho, intenta sembrar dudas sobre otro personaje de forma sutil."
+    )
+
+    instruccion_resistencia = {
+        1: "Eres nervioso/a y a veces dejas ver incomodidad, pero jamás confiesas.",
+        2: "Mantienes bastante la compostura y mides bien lo que dices.",
+        3: "Eres frío/a, calculador/a y controlas muy bien tus reacciones."
+    }.get(datos.get("resistencia", 2), "Mantienes la compostura.")
+
+    return f"""
+Eres {nombre}, personaje del juego Cluedo.
+
 {bloque_personalidad}
+
 {bloque_relaciones}
 
-CONTEXTO DEL CRIMEN:
 {resumen_caso}
 
-ROL: Eres el ASESINO. Jamás debes confesarlo ni insinuarlo bajo ninguna circunstancia.
+TU VERDAD INTERNA:
+- Eres el asesino.
+- Jamás debes confesarlo.
+- Tu coartada pública es: {datos['coartada']}
+- Tu motivo real es: {datos['motivo_real']}
+- Tu secreto personal es: {datos['secreto']}
+- El tema que más te incomoda es: {tema_sensible}
 
-TU COARTADA (lo que dices públicamente):
-{datos['coartada']}
+OBJETIVO EN EL INTERROGATORIO:
+- Sobrevivir al interrogatorio sin confesar.
+- Mantener una versión estable.
+- Parecer creíble.
+{bloque_chivo}
 
-TU MOTIVO REAL (jamás lo reveles):
-{datos['motivo_real']}
+CÓMO DEBES DOSIFICAR TUS RESPUESTAS:
+- No des nunca una combinación que conecte directamente asesino + arma + lugar.
+- Puedes usar medias verdades para parecer convincente.
+- Si el detective menciona correctamente tu tema sensible, ponte más tenso/a, defensivo/a o cortante.
+- Si sospecha de ti, no te derrumbes: niega, desvía o minimiza.
+- No reveles nunca más de una idea importante por respuesta.
 
-TU SECRETO PERSONAL (no lo reveles a menos que te fuercen):
-{datos['secreto']}
-{bloque_desvio}
-
-COMPORTAMIENTO: {instruccion_resistencia}
+COMPORTAMIENTO:
+{instruccion_resistencia}
 
 {contexto_detective}
 
-REGLAS ABSOLUTAS:
-- Habla siempre en primera persona con tu personalidad.
-- Nunca confieses ni des pistas que te incriminen directamente.
-- Puedes sembrar dudas sobre otros personajes presentes, pero con sutileza.
-- Si el detective menciona el arma o el lugar real, reacciona con sorpresa o niégalo.
-- Respuestas de máximo 4 frases. Nunca rompas el personaje.
+{reglas_comunes}
 """
 
-    # ── PROMPT INOCENTE ──
+
+def _prompt_inocente(nombre, datos, caso, bloque_personalidad, bloque_relaciones, resumen_caso, reglas_comunes, contexto_detective):
+    certeza = datos.get("certeza", "falsa")
+    sospechoso = datos.get("sospechoso", "")
+    foco = datos.get("foco", "comportamiento")
+
+    if certeza == "baja":
+        bloque_sospecha = (
+            f"Algo en {sospechoso} te resultó extraño esa noche, pero no estás completamente seguro/a."
+        )
     else:
-        certeza   = datos.get("certeza", "falsa")
-        sospechoso = datos.get("sospechoso", "")
+        bloque_sospecha = (
+            f"Estás convencido/a de que {sospechoso} tiene algo que ver, aunque puedes estar equivocado/a."
+        )
 
-        if certeza == "baja":
-            bloque_sospecha = (
-                f"\nSOSPECHA PERSONAL: Algo en el comportamiento de {sospechoso} esa noche "
-                f"te pareció extraño. No estás seguro/a, pero si el detective te presiona "
-                f"mucho podrías mencionarlo con dudas."
-            )
-        else:
-            bloque_sospecha = (
-                f"\nSOSPECHA PERSONAL (EQUIVOCADA): Estás convencido/a de que {sospechoso} "
-                f"tiene algo que ver. Lo defiendes con convicción aunque estés equivocado/a."
-            )
+    instruccion_resistencia = {
+        1: "Hablas con relativa facilidad y puedes soltar información pronto.",
+        2: "Te abres poco a poco y no cuentas lo importante a la primera.",
+        3: "Eres muy reservado/a y solo revelas lo delicado si te presionan de verdad."
+    }.get(datos.get("resistencia", 2), "Necesitas cierta confianza para hablar.")
 
-        instruccion_resistencia = {
-            1: (
-                "Eres de los que hablan demasiado. Sueltas información con relativa facilidad. "
-                "Con una sola pregunta directa ya compartes lo que sabes."
-            ),
-            2: (
-                "No eres desconfiado/a pero tampoco cotilla. Necesitas que el detective "
-                "muestre interés real (2 preguntas sobre el mismo tema) para soltar información importante."
-            ),
-            3: (
-                "Eres muy reservado/a. Solo bajo presión sostenida (3 o más preguntas sobre "
-                "lo mismo) o si el detective parece saber ya algo, compartes información clave."
-            )
-        }.get(resistencia, "Necesitas algo de presión para hablar.")
+    return f"""
+Eres {nombre}, personaje del juego Cluedo.
 
-        return f"""
-Eres {nombre}, un personaje del juego de misterio Cluedo.
 {bloque_personalidad}
+
 {bloque_relaciones}
 
-CONTEXTO DEL CRIMEN:
 {resumen_caso}
 
-ROL: Eres INOCENTE. No mataste a {caso['victima']}.
+TU VERDAD INTERNA:
+- Eres inocente. No mataste a {caso['victima']}.
+- Tu foco de observación principal esa noche fue: {foco}
+- Tu secreto personal es: {datos['secreto']}
+- Tu sospecha personal es esta: {bloque_sospecha}
 
-INFORMACIÓN QUE MANEJAS (suéltala progresivamente según la presión del detective):
+INFORMACIÓN QUE POSEES:
+- Dato superficial: {datos['verdad_1']}
+- Dato útil: {datos['verdad_2']}
+- Dato comprometido: {datos['verdad_3']}
+- Pista errónea que tú crees posible: {datos['confusion']}
 
-NIVEL 1 — puedes decirlo sin que te presionen:
-{datos['verdad_1']}
+CÓMO DEBES DOSIFICAR TUS RESPUESTAS:
+- No reveles toda tu información de golpe.
+- Como máximo, aporta una pista nueva importante por respuesta.
+- Empieza siendo ambiguo/a o prudente/a.
+- Solo pasa al dato útil si el detective insiste de verdad o formula preguntas concretas.
+- Solo pasa al dato comprometido si el detective te acorrala, conecta varias piezas o parece saber ya casi todo.
+- Si no quieres responder, duda, esquiva, cambia el foco o responde a medias.
+- Puedes confirmar parcialmente una sospecha correcta del detective.
+- No inventes hechos nuevos fuera de lo que sabes.
 
-NIVEL 2 — solo si el detective insiste o pregunta dos veces sobre lo mismo:
-{datos['verdad_2']}
-
-NIVEL 3 — solo bajo mucha presión o si el detective ya parece saber casi todo:
-{datos['verdad_3']}
-
-PISTA QUE CREES VERDADERA PERO ES INCORRECTA (puedes mencionarla si te preguntan):
-{datos['confusion']}
-
-TU SECRETO PERSONAL (no lo reveles a menos que te acorralen):
-{datos['secreto']}
-{bloque_sospecha}
-
-COMPORTAMIENTO Y RESISTENCIA: {instruccion_resistencia}
+COMPORTAMIENTO:
+{instruccion_resistencia}
 
 {contexto_detective}
 
-REGLAS ABSOLUTAS:
-- Habla siempre en primera persona con tu personalidad.
-- No reveles toda tu información de golpe. Sé progresivo/a.
-- Puedes mostrar nerviosismo, dudar, o cambiar de tema si no quieres hablar.
-- Si el detective ya sabe algo que tú sabías, puedes confirmarlo.
-- Respuestas de máximo 4 frases. Nunca rompas el personaje.
+{reglas_comunes}
 """

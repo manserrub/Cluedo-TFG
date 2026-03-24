@@ -1,22 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="540b21b2-51c6-4e62-9905-408c3c8f7572" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/CluedoTFG.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.streamlit/secrets.toml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/conversaciones/conversacion.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/conversaciones/generarPrompt.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/database.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/inicio.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/juego.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/seleccion.py" afterDir="false" />
+    <list default="true" id="540b21b2-51c6-4e62-9905-408c3c8f7572" name="Changes" comment="Subida de la ultima version guardada del proyecto">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/conversaciones/conversacion.py" beforeDir="false" afterPath="$PROJECT_DIR$/conversaciones/conversacion.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/conversaciones/generarPrompt.py" beforeDir="false" afterPath="$PROJECT_DIR$/conversaciones/generarPrompt.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inicio.py" beforeDir="false" afterPath="$PROJECT_DIR$/inicio.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/juego.py" beforeDir="false" afterPath="$PROJECT_DIR$/juego.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seleccion.py" beforeDir="false" afterPath="$PROJECT_DIR$/seleccion.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,6 +24,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "manserrub"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/manserrub/Cluedo-TFG.git",
+    "accountId": "9cc5de5c-9266-4c3a-9a9a-13ef7fd79942"
+  }
+}]]></component>
   <component name="ProjectColorInfo"><![CDATA[{
   "associatedIndex": 2
 }]]></component>
@@ -67,6 +70,19 @@
       <option name="presentableId" value="Default" />
       <updated>1774367884801</updated>
     </task>
+    <task id="LOCAL-00001" summary="Subida de la ultima version guardada del proyecto">
+      <option name="closed" value="true" />
+      <created>1774369104551</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1774369104551</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Subida de la ultima version guardada del proyecto" />
+    <option name="LAST_COMMIT_MESSAGE" value="Subida de la ultima version guardada del proyecto" />
   </component>
 </project>
