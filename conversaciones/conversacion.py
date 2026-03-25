@@ -57,7 +57,6 @@ def conversacion_personaje(personaje, datos, caso):
                 st.markdown(msg["content"])
 
     if st.session_state.get("partida_terminada", False):
-        st.warning("La partida ha terminado. Puedes revisar esta conversación, pero no continuar el interrogatorio.")
         return
 
     if prompt := st.chat_input(f"Interroga a {personaje}..."):

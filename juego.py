@@ -73,11 +73,7 @@ def juego():
 
     if st.session_state.partida_terminada:
         st.info("La investigación ha concluido. Puedes revisar las conversaciones, pero no continuar los interrogatorios.")
-        st.error(
-            f"La solución era: {caso['asesino']} mató a {caso['victima']} "
-            f"con {caso['arma']} en {caso['lugar']}. "
-            f"El motivo era: {caso['motivo']}"
-        )
+
 
     nombres = list(personajes.keys())
     choice = st.selectbox("¿Con quién quieres hablar?", nombres)
@@ -100,6 +96,7 @@ def _resolver_acusacion(acusado, arma, lugar, caso):
         st.info(f"El motivo era: {caso['motivo']}")
         return
 
+
     st.session_state.intentos_acusacion -= 1
 
     errores = []
@@ -117,4 +114,9 @@ def _resolver_acusacion(acusado, arma, lugar, caso):
         )
     else:
         st.session_state.partida_terminada = True
-        st.error("❌ Has agotado tus 3 oportunidades.")
+        st.error(
+            f"❌ Has agotado tus 3 oportunidades."
+            f"La solución era: {caso['asesino']} mató a {caso['victima']} "
+            f"con {caso['arma']} en {caso['lugar']}. "
+            f"El motivo era: {caso['motivo']}"
+        )
