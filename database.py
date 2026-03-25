@@ -9,7 +9,8 @@ def crear_conexion():
         password=st.secrets["DB_PASSWORD"],
         dbname=st.secrets["DB_NAME"],
         port=5432,
-        sslmode="require"
+        sslmode="require",
+        connect_timeout=10
     )
 
 
