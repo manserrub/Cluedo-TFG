@@ -1,9 +1,13 @@
 import psycopg2
 import streamlit as st
 
-conexion = None
-cursor = None
-
+TABLAS_CON_NOMBRE = {
+    "armas",
+    "personajes",
+    "victimas",
+    "motivos",
+    "lugares",
+}
 
 def crear_conexion():
     return psycopg2.connect(
@@ -15,82 +19,104 @@ def crear_conexion():
         sslmode="require"
     )
 
-
-def verificar_conexion():
-    global conexion, cursor
-    try:
-        if conexion is None or conexion.closed:
-            conexion = crear_conexion()
-            cursor = conexion.cursor()
-        else:
-            cursor.execute("SELECT 1")
-    except Exception:
-        conexion = crear_conexion()
-        cursor = conexion.cursor()
-
-
 def obtener_datos(tabla):
-    verificar_conexion()
-    cursor.execute(f"SELECT nombre FROM {tabla}")
-    return [row[0] for row in cursor.fetchall()]
+    if tabla not in TABLAS_CON_NOMBRE:
+        raise ValueError(f"Tabla no permitida: {tabla}")
 
+    conn = crear_conexion()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(f"SELECT nombre FROM {tabla} ORDER BY id")
+            rows = cur.fetchall()
+            return [row[0] for row in rows]
+    finally:
+        conn.close()
 
 def obtener_secretos():
-    verificar_conexion()
-    cursor.execute("SELECT descripcion FROM secretos")
-    return [row[0] for row in cursor.fetchall()]
-
+    conn = crear_conexion()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT descripcion FROM secretos ORDER BY id")
+            rows = cur.fetchall()
+            return [row[0] for row in rows]
+    finally:
+        conn.close()
 
 def obtener_hora():
-    verificar_conexion()
-    cursor.execute("SELECT hora FROM horas")
-    return [row[0] for row in cursor.fetchall()]
-
+    conn = crear_conexion()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT to_char(hora, 'HH24:MI') FROM horas ORDER BY id")
+            rows = cur.fetchall()
+            return [row[0] for row in rows]
+    finally:
+        conn.close()
 
 def obtener_personalidad(nombre):
-    verificar_conexion()
-    cursor.execute(
-        """
-        SELECT personalidad, descripcion, forma_habla, secreto_caracter, nivel_resistencia
-        FROM personajes
-        WHERE nombre = %s
-        """,
-        (nombre,)
-    )
-    row = cursor.fetchone()
+    conn = crear_conexion()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT personalidad, descripcion, forma_habla, secreto_caracter, nivel_resistencia
+                FROM personajes
+                WHERE nombre = %s
+                """,
+                (nombre,)
+            )
+            row = cur.fetchone()
 
-    if row:
-        return {
-            "personalidad": row[0],
-            "descripcion": row[1],
-            "forma_habla": row[2],
-            "secreto_caracter": row[3],
-            "nivel_resistencia": row[4]
-        }
-    return {}
+            if row:
+                return {
+                    "personalidad": row[0],
+                    "descripcion": row[1],
+                    "forma_habla": row[2],
+                    "secreto_caracter": row[3],
+                    "nivel_resistencia": row[4]
+                }
 
+            return {}
+    finally:
+        conn.close()
 
 def obtener_relaciones(nombre, participantes):
-    verificar_conexion()
-    cursor.execute(
-        """
-        SELECT personaje_a, personaje_b, tipo, descripcion
-        FROM relaciones
-        WHERE personaje_a = %s OR personaje_b = %s
-        """,
-        (nombre, nombre)
-    )
+    conn = crear_conexion()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    p1.nombre AS personaje_a_nombre,
+                    p2.nombre AS personaje_b_nombre,
+                    r.tipo,
+                    r.descripcion
+                FROM relaciones r
+                JOIN personajes p1 ON r.personaje_a = p1.id
+                JOIN personajes p2 ON r.personaje_b = p2.id
+                WHERE p1.nombre = %s OR p2.nombre = %s
+                ORDER BY r.id
+                """,
+                (nombre, nombre)
+            )
+            rows = cur.fetchall()
 
-    rows = cursor.fetchall()
-    resultado = []
+        resultado = []
 
-    for row in rows:
-        otro = row[1] if row[0] == nombre else row[0]
-        if otro in participantes:
-            resultado.append({
-                "con": otro,
-                "tipo": row[2],
-                "descripcion": row[3]
-            })
+        for row in rows:
+            personaje_a = row[0]
+            personaje_b = row[1]
+            tipo = row[2]
+            descripcion = row[3]
 
-    return resultado
+            otro = personaje_b if personaje_a == nombre else personaje_a
+
+            if otro in participantes:
+                resultado.append({
+                    "con": otro,
+                    "tipo": tipo,
+                    "descripcion": descripcion
+                })
+
+        return resultado
+    finally:
+        conn.close()

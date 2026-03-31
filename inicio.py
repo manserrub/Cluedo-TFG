@@ -2,26 +2,13 @@ import streamlit as st
 import hashlib
 import re
 import database
-from database import verificar_conexion
 
 
 def inicio():
     st.title("🔍 CLUEDO")
 
-    # Asegurar conexión a la BD
-    verificar_conexion()
-
-    # Crear tabla usuarios si no existe (PostgreSQL)
-    database.cursor.execute("""
-        CREATE TABLE IF NOT EXISTS usuarios (
-            id SERIAL PRIMARY KEY,
-            username VARCHAR(50) UNIQUE,
-            email VARCHAR(100) UNIQUE,
-            password VARCHAR(255),
-            genero VARCHAR(10)
-        )
-    """)
-    database.conexion.commit()
+    # Crear tabla usuarios si no existe
+    _crear_tabla_usuarios()
 
     st.session_state.setdefault("logueado", False)
 
@@ -38,7 +25,27 @@ def inicio():
         _registro()
 
 
-# 🔐 LOGIN
+def _crear_tabla_usuarios():
+    conn = database.crear_conexion()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS usuarios (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(50) UNIQUE,
+                    email VARCHAR(100) UNIQUE,
+                    password VARCHAR(255),
+                    genero VARCHAR(10)
+                )
+            """)
+            conn.commit()
+    except Exception as e:
+        st.error(f"Error al crear la tabla usuarios: {e}")
+    finally:
+        conn.close()
+
+
+# LOGIN
 def _login():
     st.subheader("Inicio de sesión")
 
@@ -52,30 +59,35 @@ def _login():
 
         hashed = hashlib.sha256(password.encode()).hexdigest()
 
-        verificar_conexion()
-        database.cursor.execute(
-            """
-            SELECT username, email, genero
-            FROM usuarios
-            WHERE (username = %s OR email = %s) AND password = %s
-            """,
-            (usuario_o_email, usuario_o_email, hashed)
-        )
+        conn = database.crear_conexion()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT username, email, genero
+                    FROM usuarios
+                    WHERE (username = %s OR email = %s) AND password = %s
+                    """,
+                    (usuario_o_email, usuario_o_email, hashed)
+                )
+                user = cur.fetchone()
 
-        user = database.cursor.fetchone()
+            if user:
+                st.session_state.logueado = True
+                st.session_state.usuario_actual = user[0]
+                st.session_state.email_actual = user[1]
+                st.session_state.genero_usuario = user[2]
+                st.session_state.pantalla = "seleccion"
+                st.rerun()
+            else:
+                st.error("Usuario/email o contraseña incorrectos")
+        except Exception as e:
+            st.error(f"Error al iniciar sesión: {e}")
+        finally:
+            conn.close()
 
-        if user:
-            st.session_state.logueado = True
-            st.session_state.usuario_actual = user[0]
-            st.session_state.email_actual = user[1]
-            st.session_state.genero_usuario = user[2]
-            st.session_state.pantalla = "seleccion"
-            st.rerun()
-        else:
-            st.error("Usuario/email o contraseña incorrectos")
 
-
-# 📝 REGISTRO
+# REGISTRO
 def _registro():
     st.subheader("Registro de usuario")
 
@@ -99,30 +111,33 @@ def _registro():
 
         hashed = hashlib.sha256(password.encode()).hexdigest()
 
-        verificar_conexion()
+        conn = database.crear_conexion()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT 1
+                    FROM usuarios
+                    WHERE username = %s OR email = %s
+                    """,
+                    (usuario, email)
+                )
 
-        # comprobar si existe usuario o email
-        database.cursor.execute(
-            """
-            SELECT * FROM usuarios
-            WHERE username = %s OR email = %s
-            """,
-            (usuario, email)
-        )
+                if cur.fetchone():
+                    st.error("El usuario o el correo ya existen")
+                    return
 
-        if database.cursor.fetchone():
-            st.error("El usuario o el correo ya existen")
-            return
+                cur.execute(
+                    """
+                    INSERT INTO usuarios (username, email, password, genero)
+                    VALUES (%s, %s, %s, %s)
+                    """,
+                    (usuario, email, hashed, genero)
+                )
+                conn.commit()
 
-        # insertar usuario
-        database.cursor.execute(
-            """
-            INSERT INTO usuarios (username, email, password, genero)
-            VALUES (%s, %s, %s, %s)
-            """,
-            (usuario, email, hashed, genero)
-        )
-
-        database.conexion.commit()
-
-        st.success("Usuario creado correctamente. Ya puedes iniciar sesión.")
+            st.success("Usuario creado correctamente. Ya puedes iniciar sesión.")
+        except Exception as e:
+            st.error(f"Error al registrar el usuario: {e}")
+        finally:
+            conn.close()

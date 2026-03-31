@@ -222,7 +222,7 @@ def _pista_falsa(caso):
     lugares_falsos = ["el salón", "la cocina", "el jardín", "la biblioteca", "el estudio"]
     lugares_falsos = [l for l in lugares_falsos if l != caso["lugar"]]
 
-    horas_falsas = ["las 21:00", "las 23:30", "la medianoche", "las 22:00"]
+    horas_falsas = ["21:00", "23:30", "00:00", "22:00"]
     horas_falsas = [h for h in horas_falsas if h != caso["hora"]]
 
     tipos = []
@@ -238,4 +238,5 @@ def _pista_falsa(caso):
 
     if tipo == "lugar":
         return f"Crees que el crimen ocurrió en {random.choice(lugares_falsos)}"
-    return f"Crees que el crimen ocurrió alrededor de {random.choice(horas_falsas)}"
+
+    return f"Crees que el crimen ocurrió alrededor de las {random.choice(horas_falsas)}"
