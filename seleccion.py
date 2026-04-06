@@ -1,6 +1,12 @@
 import streamlit as st
 import random
-from database import obtener_datos, obtener_secretos, obtener_hora, obtener_personalidad
+from database import (
+    obtener_datos,
+    obtener_secretos,
+    obtener_hora,
+    obtener_personalidad,
+    obtener_personajes_detallados
+)
 
 
 def seleccion():
@@ -9,12 +15,14 @@ def seleccion():
 
     datos = _cargar_datos_partida()
 
-    seleccion_jugadores = st.multiselect(
-        "Elige tus personajes (mínimo 2)",
-        datos["personajes"]
-    )
+    st.subheader("Escoge a los sospechosos de la partida")
+    st.write("Selecciona al menos 2 personajes para comenzar.")
 
-    if st.button("Comenzar partida"):
+    seleccion_jugadores = _mostrar_selector_personajes(datos["personajes_detallados"])
+
+    st.markdown("---")
+
+    if st.button("Comenzar partida", type="primary"):
         if len(seleccion_jugadores) < 2:
             st.error("Debes elegir al menos 2 personajes")
             return
@@ -52,6 +60,7 @@ def _mostrar_sidebar_usuario():
 def _cargar_datos_partida():
     return {
         "personajes": obtener_datos("personajes"),
+        "personajes_detallados": obtener_personajes_detallados(),
         "victimas": obtener_datos("victimas"),
         "armas": obtener_datos("armas"),
         "lugares": obtener_datos("lugares"),
@@ -59,6 +68,68 @@ def _cargar_datos_partida():
         "secretos": obtener_secretos(),
         "horas": obtener_hora()
     }
+
+
+def _mostrar_selector_personajes(personajes_detallados):
+    seleccionados = []
+
+    # Rutas/localizaciones de imágenes
+    # Cambia estas rutas por las tuyas reales si las tienes en otra carpeta
+    imagenes = {
+        "Miss Scarlet": "assets/personajes/miss_scarlet.png",
+        "Coronel Mustard": "assets/personajes/coronel_mustard.png",
+        "Señora Peacock": "assets/personajes/senora_peacock.png",
+        "Señora White": "assets/personajes/senora_white.png",
+        "Señor Green": "assets/personajes/senor_green.png",
+        "Profesor Plum": "assets/personajes/profesor_plum.png"
+    }
+
+    cols_por_fila = 3
+
+    for i in range(0, len(personajes_detallados), cols_por_fila):
+        fila = personajes_detallados[i:i + cols_por_fila]
+        cols = st.columns(cols_por_fila)
+
+        for j, personaje in enumerate(fila):
+            nombre = personaje["nombre"]
+            personalidad = personaje.get("personalidad", "Sin personalidad definida")
+            forma_habla = personaje.get("forma_habla", "Sin forma de hablar definida")
+            descripcion = personaje.get("descripcion", "")
+
+            with cols[j]:
+                with st.container(border=True):
+                    ruta_imagen = imagenes.get(nombre)
+
+                    try:
+                        if ruta_imagen:
+                            st.image(ruta_imagen, use_container_width=True)
+                        else:
+                            st.markdown("### 👤")
+                    except Exception:
+                        st.markdown("### 👤")
+
+                    st.markdown(f"### {nombre}")
+
+                    if descripcion:
+                        st.caption(descripcion)
+
+                    st.markdown(f"**Personalidad:** {personalidad}")
+                    st.markdown(f"**Forma de hablar:** {forma_habla}")
+
+                    marcado = st.checkbox(
+                        f"Seleccionar a {nombre}",
+                        key=f"check_{nombre}"
+                    )
+
+                    if marcado:
+                        seleccionados.append(nombre)
+
+    st.info(f"Personajes seleccionados: {len(seleccionados)}")
+
+    if seleccionados:
+        st.write("**Elegidos:** " + ", ".join(seleccionados))
+
+    return seleccionados
 
 
 def _generar_misterio(seleccion_jugadores, datos):

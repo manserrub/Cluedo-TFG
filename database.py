@@ -120,3 +120,29 @@ def obtener_relaciones(nombre, participantes):
         return resultado
     finally:
         conn.close()
+
+def obtener_personajes_detallados():
+    conn = crear_conexion()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT nombre, personalidad, descripcion, forma_habla
+                FROM personajes
+                ORDER BY id
+                """
+            )
+            rows = cur.fetchall()
+
+            personajes = []
+            for row in rows:
+                personajes.append({
+                    "nombre": row[0],
+                    "personalidad": row[1],
+                    "descripcion": row[2],
+                    "forma_habla": row[3]
+                })
+
+            return personajes
+    finally:
+        conn.close()
