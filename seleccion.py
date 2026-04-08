@@ -9,13 +9,26 @@ from database import (
 )
 
 
+IMAGENES_PERSONAJES = {
+    "Miss Scarlet": "assets/personajes/miss_scarlet.png",
+    "Coronel Mustard": "assets/personajes/coronel_mustard.png",
+    "Señora Peacock": "assets/personajes/senora_peacock.png",
+    "Señora White": "assets/personajes/senora_white.png",
+    "Señor Green": "assets/personajes/senor_green.png",
+    "Profesor Plum": "assets/personajes/profesor_plum.png"
+}
+
+
 def seleccion():
-    st.title("🔍 Selecciona tus personajes")
+    st.title("🔍 Selecciona a los sospechosos")
     _mostrar_sidebar_usuario()
 
-    datos = _cargar_datos_partida()
+    # Cargar una sola vez los datos de partida
+    if "datos_partida" not in st.session_state:
+        st.session_state.datos_partida = _cargar_datos_partida()
 
-    st.subheader("Escoge a los sospechosos de la partida")
+    datos = st.session_state.datos_partida
+
     st.write("Selecciona al menos 2 personajes para comenzar.")
 
     seleccion_jugadores = _mostrar_selector_personajes(datos["personajes_detallados"])
@@ -35,6 +48,10 @@ def seleccion():
         st.session_state.messages_por_personaje = {}
         st.session_state.historial_detective = []
         st.session_state.pantalla = "juego"
+
+        # Limpiamos datos que ya no hacen falta
+        st.session_state.pop("datos_partida", None)
+
         st.rerun()
 
 
@@ -51,12 +68,14 @@ def _mostrar_sidebar_usuario():
             "logueado", "usuario_actual", "email_actual", "genero_usuario",
             "pantalla", "caso", "personajes",
             "messages_por_personaje", "historial_detective",
-            "cuaderno_notas", "intentos_acusacion", "partida_terminada"
+            "cuaderno_notas", "intentos_acusacion", "partida_terminada",
+            "datos_partida"
         ]:
             st.session_state.pop(key, None)
         st.rerun()
 
 
+@st.cache_data(show_spinner=False)
 def _cargar_datos_partida():
     return {
         "personajes": obtener_datos("personajes"),
@@ -73,17 +92,6 @@ def _cargar_datos_partida():
 def _mostrar_selector_personajes(personajes_detallados):
     seleccionados = []
 
-    # Rutas/localizaciones de imágenes
-    # Cambia estas rutas por las tuyas reales si las tienes en otra carpeta
-    imagenes = {
-        "Miss Scarlet": "assets/personajes/miss_scarlet.png",
-        "Coronel Mustard": "assets/personajes/coronel_mustard.png",
-        "Señora Peacock": "assets/personajes/senora_peacock.png",
-        "Señora White": "assets/personajes/senora_white.png",
-        "Señor Green": "assets/personajes/senor_green.png",
-        "Profesor Plum": "assets/personajes/profesor_plum.png"
-    }
-
     cols_por_fila = 3
 
     for i in range(0, len(personajes_detallados), cols_por_fila):
@@ -98,7 +106,7 @@ def _mostrar_selector_personajes(personajes_detallados):
 
             with cols[j]:
                 with st.container(border=True):
-                    ruta_imagen = imagenes.get(nombre)
+                    ruta_imagen = IMAGENES_PERSONAJES.get(nombre)
 
                     try:
                         if ruta_imagen:
@@ -123,11 +131,6 @@ def _mostrar_selector_personajes(personajes_detallados):
 
                     if marcado:
                         seleccionados.append(nombre)
-
-    st.info(f"Personajes seleccionados: {len(seleccionados)}")
-
-    if seleccionados:
-        st.write("**Elegidos:** " + ", ".join(seleccionados))
 
     return seleccionados
 
@@ -230,7 +233,6 @@ def _crear_datos_inocente(personaje, seleccion_jugadores, caso, asesino, resiste
     return {
         "rol": "inocente",
         "resistencia": resistencia,
-        "presiones": 0,
         "foco": foco,
         "verdad_1": verdad_1,
         "verdad_2": verdad_2,

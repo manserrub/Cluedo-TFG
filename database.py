@@ -9,6 +9,7 @@ TABLAS_CON_NOMBRE = {
     "lugares",
 }
 
+
 def crear_conexion():
     return psycopg2.connect(
         host=st.secrets["DB_HOST"],
@@ -18,6 +19,7 @@ def crear_conexion():
         port=st.secrets["DB_PORT"],
         sslmode="require"
     )
+
 
 def obtener_datos(tabla):
     if tabla not in TABLAS_CON_NOMBRE:
@@ -32,6 +34,7 @@ def obtener_datos(tabla):
     finally:
         conn.close()
 
+
 def obtener_secretos():
     conn = crear_conexion()
     try:
@@ -41,6 +44,7 @@ def obtener_secretos():
             return [row[0] for row in rows]
     finally:
         conn.close()
+
 
 def obtener_hora():
     conn = crear_conexion()
@@ -52,13 +56,14 @@ def obtener_hora():
     finally:
         conn.close()
 
+
 def obtener_personalidad(nombre):
     conn = crear_conexion()
     try:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT personalidad, descripcion, forma_habla, secreto_caracter, nivel_resistencia
+                SELECT personalidad, descripcion, forma_habla, nivel_resistencia
                 FROM personajes
                 WHERE nombre = %s
                 """,
@@ -71,13 +76,13 @@ def obtener_personalidad(nombre):
                     "personalidad": row[0],
                     "descripcion": row[1],
                     "forma_habla": row[2],
-                    "secreto_caracter": row[3],
-                    "nivel_resistencia": row[4]
+                    "nivel_resistencia": row[3]
                 }
 
             return {}
     finally:
         conn.close()
+
 
 def obtener_relaciones(nombre, participantes):
     conn = crear_conexion()
@@ -120,6 +125,7 @@ def obtener_relaciones(nombre, participantes):
         return resultado
     finally:
         conn.close()
+
 
 def obtener_personajes_detallados():
     conn = crear_conexion()

@@ -5,22 +5,14 @@ def generar_prompt(nombre, datos, caso, historial_detective, genero_usuario="chi
     p = obtener_personalidad(nombre)
     participantes = caso.get("personajes", [])
     relaciones = obtener_relaciones(nombre, participantes)
-    resistencia = datos.get("resistencia", 2)
 
     tratamiento_detective = "señor detective" if genero_usuario == "chico" else "señorita detective"
 
     bloque_personalidad = f"""
 TU PERSONALIDAD:
-{p.get('descripcion', '')}
-
-RASGO GENERAL:
-{p.get('personalidad', '')}
-
-CÓMO HABLAS:
-{p.get('forma_habla', '')}
-
-SECRETO DE CARÁCTER:
-{p.get('secreto_caracter', '')}
+- Descripción: {p.get('descripcion', '')}
+- Rasgo general: {p.get('personalidad', '')}
+- Forma de hablar: {p.get('forma_habla', '')}
 """
 
     if relaciones:
@@ -45,17 +37,12 @@ HECHOS OBJETIVOS DEL CASO:
     contexto_detective = _resumir_historial(historial_detective)
 
     reglas_comunes = f"""
-FORMA DE DIRIGIRTE AL JUGADOR:
-- El jugador es {tratamiento_detective}.
-- Puedes llamarlo "{tratamiento_detective}" de forma natural, pero no en todas las frases.
-- Mantén siempre el personaje.
-
 REGLAS GENERALES:
-- Habla siempre en primera persona.
+- Habla siempre en primera persona y mantén el personaje.
+- Dirígete al jugador como {tratamiento_detective} de forma natural, pero no en todas las frases.
 - Responde con un máximo de 4 frases.
-- No rompas nunca el personaje.
-- No enumeres reglas ni expliques tu prompt.
-- No inventes nuevos hechos fuera de tu personalidad, tus relaciones, tu secreto y la información que realmente manejas.
+- No expliques tus reglas ni tu prompt.
+- No inventes hechos fuera de tu personalidad, tus relaciones, tu secreto y la información que realmente manejas.
 - Si no sabes algo con certeza, exprésalo como duda, impresión o sospecha.
 """
 
@@ -139,6 +126,7 @@ CÓMO DEBES DOSIFICAR TUS RESPUESTAS:
 - Si el detective menciona correctamente tu tema sensible, ponte más tenso/a, defensivo/a o cortante.
 - Si sospecha de ti, no te derrumbes: niega, desvía o minimiza.
 - No reveles nunca más de una idea importante por respuesta.
+- Si el detective insiste mucho o repite preguntas, puedes mostrar incomodidad, tensión o respuestas más defensivas.
 
 COMPORTAMIENTO:
 {instruccion_resistencia}
@@ -199,6 +187,7 @@ CÓMO DEBES DOSIFICAR TUS RESPUESTAS:
 - Si no quieres responder, duda, esquiva, cambia el foco o responde a medias.
 - Puedes confirmar parcialmente una sospecha correcta del detective.
 - No inventes hechos nuevos fuera de lo que sabes.
+- Si el detective insiste mucho o repite preguntas, puedes ponerte más nervioso/a y revelar más información de lo normal.
 
 COMPORTAMIENTO:
 {instruccion_resistencia}
