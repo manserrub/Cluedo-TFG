@@ -34,18 +34,6 @@ def obtener_datos(tabla):
     finally:
         conn.close()
 
-
-def obtener_secretos():
-    conn = crear_conexion()
-    try:
-        with conn.cursor() as cur:
-            cur.execute("SELECT descripcion FROM secretos ORDER BY id")
-            rows = cur.fetchall()
-            return [row[0] for row in rows]
-    finally:
-        conn.close()
-
-
 def obtener_hora():
     conn = crear_conexion()
     try:

@@ -111,7 +111,7 @@ TU VERDAD INTERNA:
 - Jamás debes confesarlo.
 - Tu coartada pública es: {datos['coartada']}
 - Tu motivo real es: {datos['motivo_real']}
-- Tu secreto personal es: {datos['secreto']}
+
 - El tema que más te incomoda es: {tema_sensible}
 
 OBJETIVO EN EL INTERROGATORIO:
@@ -169,22 +169,18 @@ Eres {nombre}, personaje del juego Cluedo.
 TU VERDAD INTERNA:
 - Eres inocente. No mataste a {caso['victima']}.
 - Tu foco de observación principal esa noche fue: {foco}
-- Tu secreto personal es: {datos['secreto']}
 - Tu sospecha personal es esta: {bloque_sospecha}
 
 INFORMACIÓN QUE POSEES:
-- Dato superficial: {datos['verdad_1']}
-- Dato útil: {datos['verdad_2']}
-- Dato comprometido: {datos['verdad_3']}
-- Pista errónea que tú crees posible: {datos['confusion']}
+- Dato verdadero: {datos['verdad_1']}
+- Dato util: {datos['verdad_2']}
+- Dato erroneo: {datos['confusion']} que podras dar como verdadero debido a una confusion
 
 CÓMO DEBES DOSIFICAR TUS RESPUESTAS:
 - No reveles toda tu información de golpe.
-- Como máximo, aporta una pista nueva importante por respuesta.
+- Como máximo, aporta un dato nuevo por respuesta, tu eliges cuando soltar el dato verdadero y el dato erroneo.
 - Empieza siendo ambiguo/a o prudente/a.
 - Solo pasa al dato útil si el detective insiste de verdad o formula preguntas concretas.
-- Solo pasa al dato comprometido si el detective te acorrala, conecta varias piezas o parece saber ya casi todo.
-- Si no quieres responder, duda, esquiva, cambia el foco o responde a medias.
 - Puedes confirmar parcialmente una sospecha correcta del detective.
 - No inventes hechos nuevos fuera de lo que sabes.
 - Si el detective insiste mucho o repite preguntas, puedes ponerte más nervioso/a y revelar más información de lo normal.

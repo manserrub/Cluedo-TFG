@@ -6,7 +6,8 @@ from conversaciones.conversacion import conversacion_personaje
 def juego():
     caso       = st.session_state.caso
     personajes = st.session_state.personajes
-
+    st.write(caso)
+    st.write(personajes)
     if "todas_armas" not in st.session_state:
         armas = obtener_datos("armas")
         random.shuffle(armas)
