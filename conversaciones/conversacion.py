@@ -72,7 +72,7 @@ def conversacion_personaje(personaje, datos, caso):
             genero_usuario
         )
 
-        with st.spinner(f"{personaje} está pensando..."):
+        with st.spinner(f"{personaje} está escribiendo..."):
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=messages,

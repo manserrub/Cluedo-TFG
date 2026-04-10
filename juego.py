@@ -6,8 +6,6 @@ from conversaciones.conversacion import conversacion_personaje
 def juego():
     caso       = st.session_state.caso
     personajes = st.session_state.personajes
-    st.write(caso)
-    st.write(personajes)
     if "todas_armas" not in st.session_state:
         armas = obtener_datos("armas")
         random.shuffle(armas)
@@ -48,9 +46,11 @@ def juego():
 
         st.markdown("### 🎯 Realizar acusación")
 
-        acusado   = st.selectbox("Asesino", caso["personajes"], key="ac_asesino")
-        arma_sel  = st.selectbox("Arma",    todas_armas,        key="ac_arma")
-        lugar_sel = st.selectbox("Lugar",   todos_lugares,      key="ac_lugar")
+        random.shuffle(todas_armas)
+        random.shuffle(todos_lugares)
+        acusado   = st.selectbox("Asesino", ["---"] + caso["personajes"], key="ac_asesino")
+        arma_sel  = st.selectbox("Arma",["---"] + todas_armas, key="ac_arma")
+        lugar_sel = st.selectbox("Lugar",["---"] + todos_lugares, key="ac_lugar")
 
         if st.session_state.partida_terminada:
             st.warning("La partida ha terminado. Ya no puedes realizar más acusaciones.")
@@ -94,7 +94,6 @@ def _resolver_acusacion(acusado, arma, lugar, caso):
             f"🎉 ¡Correcto! {caso['asesino']} mató a {caso['victima']} "
             f"con {caso['arma']} en {caso['lugar']}."
         )
-        st.info(f"El motivo era: {caso['motivo']}")
         return
 
 
@@ -116,7 +115,7 @@ def _resolver_acusacion(acusado, arma, lugar, caso):
     else:
         st.session_state.partida_terminada = True
         st.error(
-            f"❌ Has agotado tus 3 oportunidades."
+            f"❌ Has agotado tus 3 oportunidades.\n"
             f"La solución era: {caso['asesino']} mató a {caso['victima']} "
             f"con {caso['arma']} en {caso['lugar']}. "
             f"El motivo era: {caso['motivo']}"
