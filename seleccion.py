@@ -1,12 +1,11 @@
-import streamlit as st
 import random
+import streamlit as st
 from database import (
     obtener_datos,
     obtener_hora,
     obtener_personalidad,
     obtener_personajes_detallados
 )
-
 
 IMAGENES_PERSONAJES = {
     "Miss Scarlet": "assets/personajes/miss_scarlet.png",
@@ -22,12 +21,10 @@ def seleccion():
     st.title("🔍 Selecciona a los sospechosos")
     _mostrar_sidebar_usuario()
 
-    # Cargar una sola vez los datos de partida
     if "datos_partida" not in st.session_state:
         st.session_state.datos_partida = _cargar_datos_partida()
 
     datos = st.session_state.datos_partida
-
     st.write("Selecciona al menos 2 personajes para comenzar.")
 
     seleccion_jugadores = _mostrar_selector_personajes(datos["personajes_detallados"])
@@ -48,9 +45,7 @@ def seleccion():
         st.session_state.historial_detective = []
         st.session_state.pantalla = "juego"
 
-        # Limpiamos datos que ya no hacen falta
         st.session_state.pop("datos_partida", None)
-
         st.rerun()
 
 
@@ -77,7 +72,6 @@ def _mostrar_sidebar_usuario():
 @st.cache_data(show_spinner=False)
 def _cargar_datos_partida():
     return {
-        "personajes": obtener_datos("personajes"),
         "personajes_detallados": obtener_personajes_detallados(),
         "victimas": obtener_datos("victimas"),
         "armas": obtener_datos("armas"),
@@ -89,7 +83,6 @@ def _cargar_datos_partida():
 
 def _mostrar_selector_personajes(personajes_detallados):
     seleccionados = []
-
     cols_por_fila = 3
 
     for i in range(0, len(personajes_detallados), cols_por_fila):
@@ -105,7 +98,11 @@ def _mostrar_selector_personajes(personajes_detallados):
             with cols[j]:
                 with st.container(border=True):
                     ruta_imagen = IMAGENES_PERSONAJES.get(nombre)
-                    st.image(ruta_imagen, use_container_width=True)
+                    if ruta_imagen:
+                        st.image(ruta_imagen, use_container_width=True)
+                    else:
+                        st.markdown("### 👤")
+
                     st.markdown(f"### {nombre}")
 
                     if descripcion:
@@ -126,26 +123,19 @@ def _mostrar_selector_personajes(personajes_detallados):
 
 
 def _generar_misterio(seleccion_jugadores, datos):
-    asesino = random.choice(seleccion_jugadores)
-    victima = random.choice(datos["victimas"])
-    lugar = random.choice(datos["lugares"])
-    hora = random.choice(datos["horas"])
-    arma = random.choice(datos["armas"])
-    motivo = random.choice(datos["motivos"])
-
     caso = {
-        "victima": victima,
-        "asesino": asesino,
-        "arma": arma,
-        "lugar": lugar,
-        "hora": hora,
-        "motivo": motivo
+        "asesino": random.choice(seleccion_jugadores),
+        "victima": random.choice(datos["victimas"]),
+        "arma": random.choice(datos["armas"]),
+        "lugar": random.choice(datos["lugares"]),
+        "hora": random.choice(datos["horas"]),
+        "motivo": random.choice(datos["motivos"])
     }
 
     personajes_data = _crear_roles_partida(
         seleccion_jugadores=seleccion_jugadores,
         caso=caso,
-        lugares=datos["lugares"],
+        lugares=datos["lugares"]
     )
 
     return caso, personajes_data
@@ -161,40 +151,52 @@ def _crear_roles_partida(seleccion_jugadores, caso, lugares):
     lugares_falsos = [l for l in lugares if l != caso["lugar"]]
     lugar_coartada = random.choice(lugares_falsos) if lugares_falsos else caso["lugar"]
 
-    focos = ["lugar", "arma", "motivo", "comportamiento"]
-    random.shuffle(focos)
+    focos_base = ["lugar", "arma", "motivo", "comportamiento"]
+    focos_asignados = []
 
-    for i, personaje in enumerate(seleccion_jugadores):
+    while len(focos_asignados) < len(inocentes):
+        random.shuffle(focos_base)
+        focos_asignados.extend(focos_base)
+
+    mapa_focos = {
+        inocente: focos_asignados[i]
+        for i, inocente in enumerate(inocentes)
+    }
+
+    inocentes_con_sospecha_real = set(
+        random.sample(inocentes, k=min(2, len(inocentes)))
+    ) if inocentes else set()
+
+    for personaje in seleccion_jugadores:
         p_info = obtener_personalidad(personaje)
-        resistencia = p_info.get("nivel_resistencia", 2)
 
         if personaje == asesino:
             personajes_data[personaje] = _crear_datos_asesino(
                 caso=caso,
-                resistencia=resistencia,
                 lugar_coartada=lugar_coartada,
                 chivo_expiatorio=chivo_expiatorio,
             )
         else:
-            foco = focos[i % len(focos)]
+            foco = mapa_focos[personaje]
+            sospecha_real = personaje in inocentes_con_sospecha_real
+
             personajes_data[personaje] = _crear_datos_inocente(
                 personaje=personaje,
                 seleccion_jugadores=seleccion_jugadores,
                 caso=caso,
                 asesino=asesino,
-                resistencia=resistencia,
-                foco=foco
+                foco=foco,
+                sospecha_real=sospecha_real
             )
 
     return personajes_data
 
 
-def _crear_datos_asesino(caso, resistencia, lugar_coartada, chivo_expiatorio):
+def _crear_datos_asesino(caso, lugar_coartada, chivo_expiatorio):
     tema_sensible = random.choice(["arma", "lugar", "hora", "motivo", "victima"])
 
     return {
         "rol": "asesino",
-        "resistencia": resistencia,
         "coartada": f"Estabas en {lugar_coartada} cuando ocurrió todo",
         "motivo_real": caso["motivo"],
         "chivo": chivo_expiatorio,
@@ -202,19 +204,19 @@ def _crear_datos_asesino(caso, resistencia, lugar_coartada, chivo_expiatorio):
     }
 
 
-def _crear_datos_inocente(personaje, seleccion_jugadores, caso, asesino, resistencia, foco):
+def _crear_datos_inocente(personaje, seleccion_jugadores, caso, asesino, foco, sospecha_real):
     sospechoso, certeza = _generar_sospecha_inocente(
         personaje=personaje,
         seleccion_jugadores=seleccion_jugadores,
-        asesino=asesino
+        asesino=asesino,
+        sospecha_real=sospecha_real
     )
 
-    verdad_1, verdad_2, = _generar_pistas_por_foco(caso, foco)
+    verdad_1, verdad_2 = _generar_pistas_por_foco(caso, foco, sospechoso)
     confusion = _pista_falsa(caso)
 
     return {
         "rol": "inocente",
-        "resistencia": resistencia,
         "foco": foco,
         "verdad_1": verdad_1,
         "verdad_2": verdad_2,
@@ -224,48 +226,45 @@ def _crear_datos_inocente(personaje, seleccion_jugadores, caso, asesino, resiste
     }
 
 
-def _generar_sospecha_inocente(personaje, seleccion_jugadores, asesino):
+def _generar_sospecha_inocente(personaje, seleccion_jugadores, asesino, sospecha_real=False):
     otros = [p for p in seleccion_jugadores if p != personaje]
 
-    if random.random() < 0.4 and asesino in otros:
-        return asesino, "baja"
+    if sospecha_real and asesino in otros:
+        return asesino, random.choice(["baja", "media"])
 
     candidatos = [p for p in otros if p != asesino]
     sospechoso = random.choice(candidatos) if candidatos else random.choice(otros)
     return sospechoso, "falsa"
 
 
-def _generar_pistas_por_foco(caso, foco):
+def _generar_pistas_por_foco(caso, foco, sospechoso):
     if foco == "lugar":
         return (
-            f"Esa noche te fijaste en que había tensión alrededor de {caso['lugar']}.",
-            f"Viste a alguien merodeando cerca de {caso['lugar']} cuando no parecía tener motivo para estar allí.",
+            f"Esa noche te fijaste en que había una tensión extraña alrededor de {caso['lugar']}.",
+            f"No te sorprendió ver a {sospechoso} rondando cerca de {caso['lugar']} en un momento extraño."
         )
 
     if foco == "arma":
         return (
-            f"Crees haber visto {caso['arma']} fuera de su sitio habitual esa noche.",
-            f"Estás casi seguro/a de que el objeto implicado en el crimen fue {caso['arma']}."
+            f"Te llamó la atención que {caso['arma']} no estaba donde normalmente debería estar.",
+            f"Tienes la impresión de que {caso['arma']} pudo haber sido utilizada en lo ocurrido."
         )
 
     if foco == "motivo":
         return (
-            f"Te consta que había un conflicto serio con {caso['victima']} relacionado con {caso['motivo']}.",
-            f"Estás convencido/a de que el motivo real del crimen fue {caso['motivo']}."
+            f"Sabías que existía un conflicto serio relacionado con {caso['motivo']}.",
+            f"Crees que {caso['motivo']} pudo ser la causa real de lo sucedido."
         )
 
     return (
-        f"Viste a una persona salir nerviosa del entorno de {caso['lugar']} tras lo sucedido.",
-        f"Recuerdas a alguien con expresión extraña, como si intentara ocultar algo, justo después de las {caso['hora']}."
+        f"Viste a una persona actuar con nerviosismo cerca de {caso['lugar']} después de lo sucedido.",
+        f"La actitud de {sospechoso} te pareció especialmente extraña justo después de las {caso['hora']}."
     )
 
 
 def _pista_falsa(caso):
-    lugares_falsos = ["el salón", "la cocina", "el jardín", "la biblioteca", "el estudio"]
-    lugares_falsos = [l for l in lugares_falsos if l != caso["lugar"]]
-
-    armas_falsas = ["cuchillo", "cuerda", "pistola", "veneno","candelabro"]
-    armas_falsas = [h for h in armas_falsas if h != caso["arma"]]
+    lugares_falsos = [l for l in ["el salón", "la cocina", "el jardín", "la biblioteca", "el estudio"] if l != caso["lugar"]]
+    armas_falsas = [a for a in ["cuchillo", "cuerda", "pistola", "veneno", "candelabro"] if a != caso["arma"]]
 
     tipos = []
     if lugares_falsos:

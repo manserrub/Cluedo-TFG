@@ -34,6 +34,7 @@ def obtener_datos(tabla):
     finally:
         conn.close()
 
+
 def obtener_hora():
     conn = crear_conexion()
     try:
@@ -51,7 +52,7 @@ def obtener_personalidad(nombre):
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT personalidad, descripcion, forma_habla, nivel_resistencia
+                SELECT personalidad, descripcion, forma_habla
                 FROM personajes
                 WHERE nombre = %s
                 """,
@@ -63,8 +64,7 @@ def obtener_personalidad(nombre):
                 return {
                     "personalidad": row[0],
                     "descripcion": row[1],
-                    "forma_habla": row[2],
-                    "nivel_resistencia": row[3]
+                    "forma_habla": row[2]
                 }
 
             return {}
@@ -72,45 +72,48 @@ def obtener_personalidad(nombre):
         conn.close()
 
 
-def obtener_relaciones(nombre, participantes):
+def obtener_relaciones_victima(victima, participantes):
+    if not participantes:
+        return []
+
     conn = crear_conexion()
     try:
         with conn.cursor() as cur:
             cur.execute(
                 """
                 SELECT
-                    p1.nombre AS personaje_a_nombre,
-                    p2.nombre AS personaje_b_nombre,
+                    p.nombre AS personaje_nombre,
+                    v.nombre AS victima_nombre,
                     r.tipo,
                     r.descripcion
                 FROM relaciones r
-                JOIN personajes p1 ON r.personaje_a = p1.id
-                JOIN personajes p2 ON r.personaje_b = p2.id
-                WHERE p1.nombre = %s OR p2.nombre = %s
-                ORDER BY r.id
+                JOIN personajes p ON r.personaje_a = p.id
+                JOIN victimas v ON r.victima_b = v.id
+                WHERE v.nombre = %s
+                ORDER BY p.nombre
                 """,
-                (nombre, nombre)
+                (victima,)
             )
             rows = cur.fetchall()
 
-        resultado = []
+        participantes_set = set(participantes)
+        relaciones = []
 
         for row in rows:
-            personaje_a = row[0]
-            personaje_b = row[1]
+            personaje_nombre = row[0]
+            victima_nombre = row[1]
             tipo = row[2]
             descripcion = row[3]
 
-            otro = personaje_b if personaje_a == nombre else personaje_a
-
-            if otro in participantes:
-                resultado.append({
-                    "con": otro,
+            if personaje_nombre in participantes_set:
+                relaciones.append({
+                    "personaje": personaje_nombre,
+                    "victima": victima_nombre,
                     "tipo": tipo,
                     "descripcion": descripcion
                 })
 
-        return resultado
+        return relaciones
     finally:
         conn.close()
 
