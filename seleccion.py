@@ -75,7 +75,7 @@ def _cargar_datos_partida():
         "personajes_detallados": obtener_personajes_detallados(),
         "victimas": obtener_datos("victimas"),
         "armas": obtener_datos("armas"),
-        "lugares": obtener_datos("lugares"),
+        "habitaciones": obtener_datos("habitaciones"),
         "motivos": obtener_datos("motivos"),
         "horas": obtener_hora()
     }
@@ -127,7 +127,7 @@ def _generar_misterio(seleccion_jugadores, datos):
         "asesino": random.choice(seleccion_jugadores),
         "victima": random.choice(datos["victimas"]),
         "arma": random.choice(datos["armas"]),
-        "lugar": random.choice(datos["lugares"]),
+        "habitacion": random.choice(datos["habitaciones"]),
         "hora": random.choice(datos["horas"]),
         "motivo": random.choice(datos["motivos"])
     }
@@ -135,23 +135,23 @@ def _generar_misterio(seleccion_jugadores, datos):
     personajes_data = _crear_roles_partida(
         seleccion_jugadores=seleccion_jugadores,
         caso=caso,
-        lugares=datos["lugares"]
+        habitaciones=datos["habitaciones"]
     )
 
     return caso, personajes_data
 
 
-def _crear_roles_partida(seleccion_jugadores, caso, lugares):
+def _crear_roles_partida(seleccion_jugadores, caso, habitaciones):
     personajes_data = {}
     asesino = caso["asesino"]
 
     inocentes = [p for p in seleccion_jugadores if p != asesino]
     chivo_expiatorio = random.choice(inocentes) if inocentes else None
 
-    lugares_falsos = [l for l in lugares if l != caso["lugar"]]
-    lugar_coartada = random.choice(lugares_falsos) if lugares_falsos else caso["lugar"]
+    habitaciones_falsas = [l for l in habitaciones if l != caso["habitacion"]]
+    habitacion_coartada = random.choice(habitaciones_falsas) if habitaciones_falsas else caso["habitacion"]
 
-    focos_base = ["lugar", "arma", "motivo", "comportamiento"]
+    focos_base = ["habitacion", "arma", "motivo", "comportamiento"]
     focos_asignados = []
 
     while len(focos_asignados) < len(inocentes):
@@ -173,7 +173,7 @@ def _crear_roles_partida(seleccion_jugadores, caso, lugares):
         if personaje == asesino:
             personajes_data[personaje] = _crear_datos_asesino(
                 caso=caso,
-                lugar_coartada=lugar_coartada,
+                habitacion_coartada=habitacion_coartada,
                 chivo_expiatorio=chivo_expiatorio,
             )
         else:
@@ -192,12 +192,12 @@ def _crear_roles_partida(seleccion_jugadores, caso, lugares):
     return personajes_data
 
 
-def _crear_datos_asesino(caso, lugar_coartada, chivo_expiatorio):
-    tema_sensible = random.choice(["arma", "lugar", "hora", "motivo", "victima"])
+def _crear_datos_asesino(caso, habitacion_coartada, chivo_expiatorio):
+    tema_sensible = random.choice(["arma", "habitacion", "hora", "motivo", "victima"])
 
     return {
         "rol": "asesino",
-        "coartada": f"Estabas en {lugar_coartada} cuando ocurrió todo",
+        "coartada": f"Estabas en {habitacion_coartada} cuando ocurrió todo",
         "motivo_real": caso["motivo"],
         "chivo": chivo_expiatorio,
         "tema_sensible": tema_sensible
@@ -238,10 +238,10 @@ def _generar_sospecha_inocente(personaje, seleccion_jugadores, asesino, sospecha
 
 
 def _generar_pistas_por_foco(caso, foco, sospechoso):
-    if foco == "lugar":
+    if foco == "habitacion":
         return (
-            f"Esa noche te fijaste en que había una tensión extraña alrededor de {caso['lugar']}.",
-            f"No te sorprendió ver a {sospechoso} rondando cerca de {caso['lugar']} en un momento extraño."
+            f"Esa noche te fijaste en que había una tensión extraña alrededor de {caso['habitacion']}.",
+            f"No te sorprendió ver a {sospechoso} rondando cerca de {caso['habitacion']} en un momento extraño."
         )
 
     if foco == "arma":
@@ -257,18 +257,18 @@ def _generar_pistas_por_foco(caso, foco, sospechoso):
         )
 
     return (
-        f"Viste a una persona actuar con nerviosismo cerca de {caso['lugar']} después de lo sucedido.",
+        f"Viste a una persona actuar con nerviosismo cerca de {caso['habitacion']} después de lo sucedido.",
         f"La actitud de {sospechoso} te pareció especialmente extraña justo después de las {caso['hora']}."
     )
 
 
 def _pista_falsa(caso):
-    lugares_falsos = [l for l in ["el salón", "la cocina", "el jardín", "la biblioteca", "el estudio"] if l != caso["lugar"]]
+    habitaciones_falsas = [l for l in ["el salón", "la cocina", "el jardín", "la biblioteca", "el estudio"] if l != caso["habitacion"]]
     armas_falsas = [a for a in ["cuchillo", "cuerda", "pistola", "veneno", "candelabro"] if a != caso["arma"]]
 
     tipos = []
-    if lugares_falsos:
-        tipos.append("lugar")
+    if habitaciones_falsas:
+        tipos.append("habitacion")
     if armas_falsas:
         tipos.append("arma")
 
@@ -277,7 +277,7 @@ def _pista_falsa(caso):
 
     tipo = random.choice(tipos)
 
-    if tipo == "lugar":
-        return f"Crees que el crimen ocurrió en {random.choice(lugares_falsos)}"
+    if tipo == "habitacion":
+        return f"Crees que el crimen ocurrió en {random.choice(habitaciones_falsas)}"
 
     return f"Crees que el crimen se produjo con {random.choice(armas_falsas)}"

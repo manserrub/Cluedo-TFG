@@ -24,7 +24,7 @@ TU PERSONALIDAD:
 HECHOS OBJETIVOS DEL CASO (esta es la solucion del caso):
 - La víctima es {caso['victima']}.
 - El crimen ocurrió alrededor de las {caso['hora']}.
-- El caso gira en torno a {caso['lugar']}, {caso['arma']} y el motivo {caso['motivo']}.
+- El caso gira en torno a {caso['habitacion']}, {caso['arma']} y el motivo {caso['motivo']}.
 - Los únicos presentes en la mansión son: {", ".join(participantes)}.
 - No existen personas fuera de esa lista.
 """
@@ -119,11 +119,11 @@ CÓMO DEBES ACTUAR:
 - Sobrevive al interrogatorio sin confesar.
 - Mantén una versión estable.
 - Puedes usar la historia entre la víctima y los presentes para insinuar móviles o incriminar a otros.
-- No pierdas el foco del interrogatorio: lugar, arma, motivo, comportamiento y lo ocurrido esa noche.
+- No pierdas el foco del interrogatorio: habitacion, arma, motivo, comportamiento y lo ocurrido esa noche.
 {desvio}
 
 CÓMO RESPONDES:
-- No des nunca una combinación que conecte directamente asesino + arma + lugar.
+- No des nunca una combinación que conecte directamente asesino + arma + habitacion.
 - Puedes usar medias verdades para parecer convincente.
 - Si el detective menciona correctamente tu tema sensible, ponte más tenso/a, defensivo/a o cortante.
 - Si sospecha de ti, niega, desvía o minimiza.

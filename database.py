@@ -6,7 +6,7 @@ TABLAS_CON_NOMBRE = {
     "personajes",
     "victimas",
     "motivos",
-    "lugares",
+    "habitaciones",
 }
 
 

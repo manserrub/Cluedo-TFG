@@ -11,17 +11,17 @@ def juego():
         random.shuffle(armas)
         st.session_state.todas_armas = armas
 
-    if "todos_lugares" not in st.session_state:
-        lugares = obtener_datos("lugares")
-        random.shuffle(lugares)
-        st.session_state.todos_lugares = lugares
+    if "todos_habitaciones" not in st.session_state:
+        habitaciones = obtener_datos("habitaciones")
+        random.shuffle(habitaciones)
+        st.session_state.todos_habitaciones = habitaciones
 
     st.session_state.setdefault("cuaderno_notas", "")
     st.session_state.setdefault("intentos_acusacion", 3)
     st.session_state.setdefault("partida_terminada", False)
 
     todas_armas   = st.session_state.todas_armas
-    todos_lugares = st.session_state.todos_lugares
+    todos_habitaciones = st.session_state.todos_habitaciones
 
     with st.sidebar:
         st.markdown("### 🔍 El caso")
@@ -47,22 +47,22 @@ def juego():
         st.markdown("### 🎯 Realizar acusación")
 
         random.shuffle(todas_armas)
-        random.shuffle(todos_lugares)
+        random.shuffle(todos_habitaciones)
         acusado   = st.selectbox("Asesino", ["---"] + caso["personajes"], key="ac_asesino")
         arma_sel  = st.selectbox("Arma",["---"] + todas_armas, key="ac_arma")
-        lugar_sel = st.selectbox("Lugar",["---"] + todos_lugares, key="ac_lugar")
+        habitacion_sel = st.selectbox("Habitacion",["---"] + todos_habitaciones, key="ac_habitacion")
 
         if st.session_state.partida_terminada:
             st.warning("La partida ha terminado. Ya no puedes realizar más acusaciones.")
         else:
             if st.button("⚖️ Acusar", type="primary"):
-                _resolver_acusacion(acusado, arma_sel, lugar_sel, caso)
+                _resolver_acusacion(acusado, arma_sel, habitacion_sel, caso)
 
         st.divider()
         if st.button("🔄 Nueva partida"):
             for key in [
                 "caso", "personajes", "messages_por_personaje",
-                "historial_detective", "todas_armas", "todos_lugares",
+                "historial_detective", "todas_armas", "todos_habitaciones",
                 "cuaderno_notas", "intentos_acusacion", "partida_terminada"
             ]:
                 st.session_state.pop(key, None)
@@ -82,17 +82,17 @@ def juego():
     conversacion_personaje(choice, personajes[choice], caso)
 
 
-def _resolver_acusacion(acusado, arma, lugar, caso):
+def _resolver_acusacion(acusado, arma, habitacion, caso):
     acierto_asesino = acusado == caso["asesino"]
     acierto_arma    = arma.lower()  in caso["arma"].lower()  or caso["arma"].lower()  in arma.lower()
-    acierto_lugar   = lugar.lower() in caso["lugar"].lower() or caso["lugar"].lower() in lugar.lower()
+    acierto_habitacion   = habitacion.lower() in caso["habitacion"].lower() or caso["habitacion"].lower() in habitacion.lower()
 
-    if acierto_asesino and acierto_arma and acierto_lugar:
+    if acierto_asesino and acierto_arma and acierto_habitacion:
         st.session_state.partida_terminada = True
         st.balloons()
         st.success(
             f"🎉 ¡Correcto! {caso['asesino']} mató a {caso['victima']} "
-            f"con {caso['arma']} en {caso['lugar']}."
+            f"con {caso['arma']} en {caso['habitacion']}."
         )
         return
 
@@ -104,8 +104,8 @@ def _resolver_acusacion(acusado, arma, lugar, caso):
         errores.append("el asesino")
     if not acierto_arma:
         errores.append("el arma")
-    if not acierto_lugar:
-        errores.append("el lugar")
+    if not acierto_habitaciones:
+        errores.append("la habitacion")
 
     if st.session_state.intentos_acusacion > 0:
         st.error(
@@ -117,6 +117,6 @@ def _resolver_acusacion(acusado, arma, lugar, caso):
         st.error(
             f"❌ Has agotado tus 3 oportunidades.\n"
             f"La solución era: {caso['asesino']} mató a {caso['victima']} "
-            f"con {caso['arma']} en {caso['lugar']}. "
+            f"con {caso['arma']} en {caso['habitacion']}. "
             f"El motivo era: {caso['motivo']}"
         )
