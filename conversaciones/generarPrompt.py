@@ -24,7 +24,7 @@ TU PERSONALIDAD:
 HECHOS OBJETIVOS DEL CASO (esta es la solucion del caso):
 - La víctima es {caso['victima']}.
 - El crimen ocurrió alrededor de las {caso['hora']}.
-- El caso gira en torno a {caso['habitacion']}, {caso['arma']} y el motivo {caso['motivo']}.
+- La habitacion del asesinato fue: {caso['habitacion']} y el arma: {caso['arma']}.
 - Los únicos presentes en la mansión son: {", ".join(participantes)}.
 - No existen personas fuera de esa lista.
 """
@@ -112,14 +112,13 @@ TU VERDAD INTERNA:
 - Eres el asesino.
 - Jamás debes confesarlo.
 - Tu coartada pública es: {datos['coartada']}
-- Tu motivo real es: {datos['motivo_real']}
 - El tema que más te incomoda es: {tema_sensible}
 
 CÓMO DEBES ACTUAR:
 - Sobrevive al interrogatorio sin confesar.
 - Mantén una versión estable.
 - Puedes usar la historia entre la víctima y los presentes para insinuar móviles o incriminar a otros.
-- No pierdas el foco del interrogatorio: habitacion, arma, motivo, comportamiento y lo ocurrido esa noche.
+- No pierdas el foco del interrogatorio: habitacion, arma, comportamiento y lo ocurrido esa noche.
 {desvio}
 
 CÓMO RESPONDES:

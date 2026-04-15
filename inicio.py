@@ -5,7 +5,7 @@ import database
 
 
 def inicio():
-    st.title("🔍 CLUEDO")
+    st.title("CLUEDO")
 
     # Crear tabla usuarios si no existe
     _crear_tabla_usuarios()
@@ -141,3 +141,60 @@ def _registro():
             st.error(f"Error al registrar el usuario: {e}")
         finally:
             conn.close()
+
+def eliminar_cuenta_actual():
+    usuario = st.session_state.get("usuario_actual")
+    email = st.session_state.get("email_actual")
+
+    if not usuario or not email:
+        st.error("No hay ninguna sesión activa.")
+        return
+
+    conn = database.crear_conexion()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                DELETE FROM usuarios
+                WHERE username = %s AND email = %s
+                """,
+                (usuario, email)
+            )
+            conn.commit()
+
+        for key in [
+            "logueado", "usuario_actual", "email_actual", "genero_usuario",
+            "pantalla", "caso", "personajes", "messages_por_personaje",
+            "historial_detective", "cuaderno_notas", "intentos_acusacion",
+            "partida_terminada", "datos_partida", "todas_armas",
+            "todos_habitaciones", "ac_asesino", "ac_arma", "ac_habitacion",
+            "mostrar_confirmacion_borrado"
+        ]:
+            st.session_state.pop(key, None)
+
+        st.session_state.pantalla = "inicio"
+        st.rerun()
+
+    except Exception as e:
+        st.error(f"Error al eliminar la cuenta: {e}")
+    finally:
+        conn.close()
+
+def mostrar_confirmacion_borrado():
+    if not st.session_state.get("mostrar_confirmacion_borrado", False):
+        return
+
+    with st.container(border=True):
+        st.error("⚠️ ¿Seguro que quieres borrar tu cuenta?")
+        st.write("Esta acción eliminará tu usuario y no se podrá deshacer.")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("✅ Confirmar borrado", use_container_width=True):
+                eliminar_cuenta_actual()
+
+        with col2:
+            if st.button("❌ Cancelar", use_container_width=True):
+                st.session_state.mostrar_confirmacion_borrado = False
+                st.rerun()

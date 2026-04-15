@@ -2,10 +2,12 @@ import streamlit as st
 import random
 from database import obtener_datos
 from conversaciones.conversacion import conversacion_personaje
+from inicio import mostrar_confirmacion_borrado
 
 def juego():
-    caso       = st.session_state.caso
+    caso = st.session_state.caso
     personajes = st.session_state.personajes
+
     if "todas_armas" not in st.session_state:
         armas = obtener_datos("armas")
         random.shuffle(armas)
@@ -19,8 +21,9 @@ def juego():
     st.session_state.setdefault("cuaderno_notas", "")
     st.session_state.setdefault("intentos_acusacion", 3)
     st.session_state.setdefault("partida_terminada", False)
+    st.session_state.setdefault("mostrar_confirmacion_borrado", False)
 
-    todas_armas   = st.session_state.todas_armas
+    todas_armas = st.session_state.todas_armas
     todos_habitaciones = st.session_state.todos_habitaciones
 
     with st.sidebar:
@@ -43,14 +46,14 @@ def juego():
             st.rerun()
 
         st.divider()
-
         st.markdown("### 🎯 Realizar acusación")
 
         random.shuffle(todas_armas)
         random.shuffle(todos_habitaciones)
-        acusado   = st.selectbox("Asesino", ["---"] + caso["personajes"], key="ac_asesino")
-        arma_sel  = st.selectbox("Arma",["---"] + todas_armas, key="ac_arma")
-        habitacion_sel = st.selectbox("Habitacion",["---"] + todos_habitaciones, key="ac_habitacion")
+
+        acusado = st.selectbox("Asesino", ["---"] + caso["personajes"], key="ac_asesino")
+        arma_sel = st.selectbox("Arma", ["---"] + todas_armas, key="ac_arma")
+        habitacion_sel = st.selectbox("Habitación", ["---"] + todos_habitaciones, key="ac_habitacion")
 
         if st.session_state.partida_terminada:
             st.warning("La partida ha terminado. Ya no puedes realizar más acusaciones.")
@@ -59,33 +62,49 @@ def juego():
                 _resolver_acusacion(acusado, arma_sel, habitacion_sel, caso)
 
         st.divider()
+
         if st.button("🔄 Nueva partida"):
             for key in [
                 "caso", "personajes", "messages_por_personaje",
                 "historial_detective", "todas_armas", "todos_habitaciones",
-                "cuaderno_notas", "intentos_acusacion", "partida_terminada"
+                "cuaderno_notas", "intentos_acusacion", "partida_terminada",
+                "mostrar_confirmacion_borrado"
             ]:
                 st.session_state.pop(key, None)
             st.session_state.pantalla = "seleccion"
             st.rerun()
 
-    st.title("🔍 El caso comienza")
+        st.divider()
+        st.markdown("### ⚠️ Cuenta")
+
+        st.sidebar.write(f"👤 {st.session_state.usuario_actual}")
+        if st.session_state.get("email_actual"):
+            st.sidebar.write(f"📧 {st.session_state.email_actual}")
+
+        if st.button("🗑️ Borrar cuenta"):
+            st.session_state.mostrar_confirmacion_borrado = True
+            st.rerun()
+        mostrar_confirmacion_borrado()
+
     st.caption(f"Investiga la muerte de **{caso['victima']}**. Interroga a los sospechosos y resuelve el caso.")
 
     if st.session_state.partida_terminada:
         st.info("La investigación ha concluido. Puedes revisar las conversaciones, pero no continuar los interrogatorios.")
 
-
     nombres = list(personajes.keys())
     choice = st.selectbox("¿Con quién quieres hablar?", nombres)
     st.divider()
     conversacion_personaje(choice, personajes[choice], caso)
+    st.divider()
 
 
 def _resolver_acusacion(acusado, arma, habitacion, caso):
     acierto_asesino = acusado == caso["asesino"]
-    acierto_arma    = arma.lower()  in caso["arma"].lower()  or caso["arma"].lower()  in arma.lower()
-    acierto_habitacion   = habitacion.lower() in caso["habitacion"].lower() or caso["habitacion"].lower() in habitacion.lower()
+    acierto_arma = arma.lower() in caso["arma"].lower() or caso["arma"].lower() in arma.lower()
+    acierto_habitacion = (
+        habitacion.lower() in caso["habitacion"].lower()
+        or caso["habitacion"].lower() in habitacion.lower()
+    )
 
     if acierto_asesino and acierto_arma and acierto_habitacion:
         st.session_state.partida_terminada = True
@@ -96,7 +115,6 @@ def _resolver_acusacion(acusado, arma, habitacion, caso):
         )
         return
 
-
     st.session_state.intentos_acusacion -= 1
 
     errores = []
@@ -104,8 +122,8 @@ def _resolver_acusacion(acusado, arma, habitacion, caso):
         errores.append("el asesino")
     if not acierto_arma:
         errores.append("el arma")
-    if not acierto_habitaciones:
-        errores.append("la habitacion")
+    if not acierto_habitacion:
+        errores.append("la habitación")
 
     if st.session_state.intentos_acusacion > 0:
         st.error(
@@ -117,6 +135,5 @@ def _resolver_acusacion(acusado, arma, habitacion, caso):
         st.error(
             f"❌ Has agotado tus 3 oportunidades.\n"
             f"La solución era: {caso['asesino']} mató a {caso['victima']} "
-            f"con {caso['arma']} en {caso['habitacion']}. "
-            f"El motivo era: {caso['motivo']}"
+            f"con {caso['arma']} en {caso['habitacion']}."
         )

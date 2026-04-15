@@ -6,6 +6,7 @@ from database import (
     obtener_personalidad,
     obtener_personajes_detallados
 )
+from inicio import mostrar_confirmacion_borrado
 
 IMAGENES_PERSONAJES = {
     "Miss Scarlet": "assets/personajes/miss_scarlet.png",
@@ -18,7 +19,9 @@ IMAGENES_PERSONAJES = {
 
 
 def seleccion():
-    st.title("🔍 Selecciona a los sospechosos")
+    st.title("Selecciona a los sospechosos")
+
+    st.session_state.setdefault("mostrar_confirmacion_borrado", False)
     _mostrar_sidebar_usuario()
 
     if "datos_partida" not in st.session_state:
@@ -50,23 +53,29 @@ def seleccion():
 
 
 def _mostrar_sidebar_usuario():
-    if not st.session_state.get("usuario_actual"):
-        return
+    with st.sidebar:
+        st.markdown("### ⚠️ Cuenta")
+        st.write(f"👤 {st.session_state.usuario_actual}")
+        if st.session_state.get("email_actual"):
+            st.write(f"📧 {st.session_state.email_actual}")
 
-    st.sidebar.write(f"👤 {st.session_state.usuario_actual}")
-    if st.session_state.get("email_actual"):
-        st.sidebar.write(f"📧 {st.session_state.email_actual}")
+        if st.button("Cerrar sesión"):
+            for key in [
+                "logueado", "usuario_actual", "email_actual", "genero_usuario",
+                "pantalla", "caso", "personajes",
+                "messages_por_personaje", "historial_detective",
+                "cuaderno_notas", "intentos_acusacion", "partida_terminada",
+                "datos_partida", "mostrar_confirmacion_borrado"
+            ]:
+                st.session_state.pop(key, None)
+            st.rerun()
 
-    if st.sidebar.button("Cerrar sesión"):
-        for key in [
-            "logueado", "usuario_actual", "email_actual", "genero_usuario",
-            "pantalla", "caso", "personajes",
-            "messages_por_personaje", "historial_detective",
-            "cuaderno_notas", "intentos_acusacion", "partida_terminada",
-            "datos_partida"
-        ]:
-            st.session_state.pop(key, None)
-        st.rerun()
+        st.divider()
+
+        if st.sidebar.button("🗑️ Borrar cuenta"):
+            st.session_state.mostrar_confirmacion_borrado = True
+            st.rerun()
+        mostrar_confirmacion_borrado()
 
 
 @st.cache_data(show_spinner=False)
@@ -76,7 +85,6 @@ def _cargar_datos_partida():
         "victimas": obtener_datos("victimas"),
         "armas": obtener_datos("armas"),
         "habitaciones": obtener_datos("habitaciones"),
-        "motivos": obtener_datos("motivos"),
         "horas": obtener_hora()
     }
 
@@ -128,8 +136,7 @@ def _generar_misterio(seleccion_jugadores, datos):
         "victima": random.choice(datos["victimas"]),
         "arma": random.choice(datos["armas"]),
         "habitacion": random.choice(datos["habitaciones"]),
-        "hora": random.choice(datos["horas"]),
-        "motivo": random.choice(datos["motivos"])
+        "hora": random.choice(datos["horas"])
     }
 
     personajes_data = _crear_roles_partida(
@@ -151,7 +158,7 @@ def _crear_roles_partida(seleccion_jugadores, caso, habitaciones):
     habitaciones_falsas = [l for l in habitaciones if l != caso["habitacion"]]
     habitacion_coartada = random.choice(habitaciones_falsas) if habitaciones_falsas else caso["habitacion"]
 
-    focos_base = ["habitacion", "arma", "motivo", "comportamiento"]
+    focos_base = ["habitacion", "arma", "comportamiento"]
     focos_asignados = []
 
     while len(focos_asignados) < len(inocentes):
@@ -193,12 +200,11 @@ def _crear_roles_partida(seleccion_jugadores, caso, habitaciones):
 
 
 def _crear_datos_asesino(caso, habitacion_coartada, chivo_expiatorio):
-    tema_sensible = random.choice(["arma", "habitacion", "hora", "motivo", "victima"])
+    tema_sensible = random.choice(["arma", "habitacion", "hora", "victima"])
 
     return {
         "rol": "asesino",
         "coartada": f"Estabas en {habitacion_coartada} cuando ocurrió todo",
-        "motivo_real": caso["motivo"],
         "chivo": chivo_expiatorio,
         "tema_sensible": tema_sensible
     }
@@ -248,12 +254,6 @@ def _generar_pistas_por_foco(caso, foco, sospechoso):
         return (
             f"Te llamó la atención que {caso['arma']} no estaba donde normalmente debería estar.",
             f"Tienes la impresión de que {caso['arma']} pudo haber sido utilizada en lo ocurrido."
-        )
-
-    if foco == "motivo":
-        return (
-            f"Sabías que existía un conflicto serio relacionado con {caso['motivo']}.",
-            f"Crees que {caso['motivo']} pudo ser la causa real de lo sucedido."
         )
 
     return (
