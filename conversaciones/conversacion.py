@@ -74,10 +74,8 @@ def conversacion_personaje(personaje, datos, caso):
 
         with st.spinner(f"{personaje} está escribiendo..."):
             response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=messages,
-                max_tokens=400,
-                temperature=0.85
+                model="gpt-5-mini",
+                messages=messages
             )
 
         reply = response.choices[0].message.content

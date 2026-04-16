@@ -4,6 +4,9 @@ from database import obtener_datos
 from conversaciones.conversacion import conversacion_personaje
 from inicio import mostrar_confirmacion_borrado
 
+def limpiar_cuaderno():
+    st.session_state.cuaderno_notas = ""
+
 def juego():
     caso = st.session_state.caso
     personajes = st.session_state.personajes
@@ -34,16 +37,15 @@ def juego():
         st.divider()
 
         st.markdown("### 📓 Cuaderno del detective")
+
+        st.button("🧹 Limpiar notas", on_click=limpiar_cuaderno,width='stretch')
+
         st.text_area(
             "Notas del caso",
             key="cuaderno_notas",
             height=220,
             placeholder="Escribe aquí tus deducciones, contradicciones y pistas importantes..."
         )
-
-        if st.button("🧹 Limpiar notas"):
-            st.session_state.cuaderno_notas = ""
-            st.rerun()
 
         st.divider()
         st.markdown("### 🎯 Realizar acusación")
@@ -58,12 +60,12 @@ def juego():
         if st.session_state.partida_terminada:
             st.warning("La partida ha terminado. Ya no puedes realizar más acusaciones.")
         else:
-            if st.button("⚖️ Acusar", type="primary"):
+            if st.button("⚖️ Acusar", type="primary",width='stretch'):
                 _resolver_acusacion(acusado, arma_sel, habitacion_sel, caso)
 
         st.divider()
 
-        if st.button("🔄 Nueva partida"):
+        if st.button("🔄 Nueva partida",width='stretch'):
             for key in [
                 "caso", "personajes", "messages_por_personaje",
                 "historial_detective", "todas_armas", "todos_habitaciones",
@@ -81,7 +83,7 @@ def juego():
         if st.session_state.get("email_actual"):
             st.sidebar.write(f"📧 {st.session_state.email_actual}")
 
-        if st.button("🗑️ Borrar cuenta"):
+        if st.button("🗑️ Borrar cuenta",width='stretch'):
             st.session_state.mostrar_confirmacion_borrado = True
             st.rerun()
         mostrar_confirmacion_borrado()
@@ -95,8 +97,6 @@ def juego():
     choice = st.selectbox("¿Con quién quieres hablar?", nombres)
     st.divider()
     conversacion_personaje(choice, personajes[choice], caso)
-    st.divider()
-
 
 def _resolver_acusacion(acusado, arma, habitacion, caso):
     acierto_asesino = acusado == caso["asesino"]

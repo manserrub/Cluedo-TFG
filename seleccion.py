@@ -32,9 +32,9 @@ def seleccion():
 
     seleccion_jugadores = _mostrar_selector_personajes(datos["personajes_detallados"])
 
-    st.markdown("---")
+    st.divider()
 
-    if st.button("Comenzar partida", type="primary"):
+    if st.button("Comenzar partida", type="primary",width='stretch'):
         if len(seleccion_jugadores) < 2:
             st.error("Debes elegir al menos 2 personajes")
             return
@@ -59,7 +59,7 @@ def _mostrar_sidebar_usuario():
         if st.session_state.get("email_actual"):
             st.write(f"📧 {st.session_state.email_actual}")
 
-        if st.button("Cerrar sesión"):
+        if st.button("Cerrar sesión",width='stretch'):
             for key in [
                 "logueado", "usuario_actual", "email_actual", "genero_usuario",
                 "pantalla", "caso", "personajes",
@@ -72,7 +72,7 @@ def _mostrar_sidebar_usuario():
 
         st.divider()
 
-        if st.sidebar.button("🗑️ Borrar cuenta"):
+        if st.sidebar.button("🗑️ Borrar cuenta",width='stretch'):
             st.session_state.mostrar_confirmacion_borrado = True
             st.rerun()
         mostrar_confirmacion_borrado()
@@ -107,7 +107,7 @@ def _mostrar_selector_personajes(personajes_detallados):
                 with st.container(border=True):
                     ruta_imagen = IMAGENES_PERSONAJES.get(nombre)
                     if ruta_imagen:
-                        st.image(ruta_imagen, use_container_width=True)
+                        st.image(ruta_imagen, width='stretch')
                     else:
                         st.markdown("### 👤")
 

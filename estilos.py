@@ -14,10 +14,6 @@ def aplicar_estilos():
         letter-spacing: 0.5px;
     }
 
-    button {
-        font-family: Georgia, "Times New Roman", serif !important;
-    }
-
     input, textarea, select {
         font-family: Georgia, "Times New Roman", serif !important;
     }
