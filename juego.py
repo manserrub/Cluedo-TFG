@@ -3,6 +3,7 @@ import random
 from database import obtener_datos
 from conversaciones.conversacion import conversacion_personaje
 from inicio import mostrar_confirmacion_borrado
+from game_logic import resolver_acusacion
 
 def limpiar_cuaderno():
     st.session_state.cuaderno_notas = ""
@@ -50,22 +51,36 @@ def juego():
         st.divider()
         st.markdown("### 🎯 Realizar acusación")
 
-        random.shuffle(todas_armas)
-        random.shuffle(todos_habitaciones)
-
         acusado = st.selectbox("Asesino", ["---"] + caso["personajes"], key="ac_asesino")
-        arma_sel = st.selectbox("Arma", ["---"] + todas_armas, key="ac_arma")
-        habitacion_sel = st.selectbox("Habitación", ["---"] + todos_habitaciones, key="ac_habitacion")
+        arma_sel = st.selectbox("Arma", ["---"] + list(todas_armas), key="ac_arma")
+        habitacion_sel = st.selectbox("Habitación", ["---"] + list(todos_habitaciones), key="ac_habitacion")
 
         if st.session_state.partida_terminada:
             st.warning("La partida ha terminado. Ya no puedes realizar más acusaciones.")
         else:
-            if st.button("⚖️ Acusar", type="primary",width='stretch'):
-                _resolver_acusacion(acusado, arma_sel, habitacion_sel, caso)
+            if st.button("⚖️ Acusar", type="primary", width='stretch'):
+                resultado = resolver_acusacion(
+                    acusado,
+                    arma_sel,
+                    habitacion_sel,
+                    caso,
+                    st.session_state.intentos_acusacion,
+                )
+                st.session_state.intentos_acusacion = resultado["intentos"]
+
+                if resultado["resultado"] == "victoria":
+                    st.session_state.partida_terminada = True
+                    st.balloons()
+                    st.success(resultado["mensaje"])
+                elif resultado["resultado"] == "derrota":
+                    st.session_state.partida_terminada = True
+                    st.error(resultado["mensaje"])
+                else:
+                    st.error(resultado["mensaje"])
 
         st.divider()
 
-        if st.button("🔄 Nueva partida",width='stretch'):
+        if st.button("🔄 Nueva partida", width='stretch'):
             for key in [
                 "caso", "personajes", "messages_por_personaje",
                 "historial_detective", "todas_armas", "todos_habitaciones",
@@ -83,7 +98,7 @@ def juego():
         if st.session_state.get("email_actual"):
             st.sidebar.write(f"📧 {st.session_state.email_actual}")
 
-        if st.button("🗑️ Borrar cuenta",width='stretch'):
+        if st.button("🗑️ Borrar cuenta", width='stretch'):
             st.session_state.mostrar_confirmacion_borrado = True
             st.rerun()
         mostrar_confirmacion_borrado()

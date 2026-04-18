@@ -1,5 +1,6 @@
 import psycopg2
 import streamlit as st
+from psycopg2 import sql
 
 TABLAS_CON_NOMBRE = {
     "armas",
@@ -24,30 +25,24 @@ def obtener_datos(tabla):
     if tabla not in TABLAS_CON_NOMBRE:
         raise ValueError(f"Tabla no permitida: {tabla}")
 
-    conn = crear_conexion()
-    try:
+    with crear_conexion() as conn:
         with conn.cursor() as cur:
-            cur.execute(f"SELECT nombre FROM {tabla} ORDER BY id")
+            query = sql.SQL("SELECT nombre FROM {} ORDER BY id").format(sql.Identifier(tabla))
+            cur.execute(query)
             rows = cur.fetchall()
             return [row[0] for row in rows]
-    finally:
-        conn.close()
 
 
 def obtener_hora():
-    conn = crear_conexion()
-    try:
+    with crear_conexion() as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT to_char(hora, 'HH24:MI') FROM horas ORDER BY id")
             rows = cur.fetchall()
             return [row[0] for row in rows]
-    finally:
-        conn.close()
 
 
 def obtener_personalidad(nombre):
-    conn = crear_conexion()
-    try:
+    with crear_conexion() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -59,24 +54,21 @@ def obtener_personalidad(nombre):
             )
             row = cur.fetchone()
 
-            if row:
-                return {
-                    "personalidad": row[0],
-                    "descripcion": row[1],
-                    "forma_habla": row[2]
-                }
+    if row:
+        return {
+            "personalidad": row[0],
+            "descripcion": row[1],
+            "forma_habla": row[2],
+        }
 
-            return {}
-    finally:
-        conn.close()
+    return {}
 
 
 def obtener_relaciones_victima(victima, participantes):
     if not participantes:
         return []
 
-    conn = crear_conexion()
-    try:
+    with crear_conexion() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -95,26 +87,24 @@ def obtener_relaciones_victima(victima, participantes):
             )
             rows = cur.fetchall()
 
-        participantes_set = set(participantes)
-        relaciones = []
+    participantes_set = set(participantes)
+    relaciones = []
 
-        for row in rows:
-            personaje_nombre = row[0]
-            victima_nombre = row[1]
-            tipo = row[2]
-            descripcion = row[3]
+    for row in rows:
+        personaje_nombre = row[0]
+        victima_nombre = row[1]
+        tipo = row[2]
+        descripcion = row[3]
 
-            if personaje_nombre in participantes_set:
-                relaciones.append({
-                    "personaje": personaje_nombre,
-                    "victima": victima_nombre,
-                    "tipo": tipo,
-                    "descripcion": descripcion
-                })
+        if personaje_nombre in participantes_set:
+            relaciones.append({
+                "personaje": personaje_nombre,
+                "victima": victima_nombre,
+                "tipo": tipo,
+                "descripcion": descripcion,
+            })
 
-        return relaciones
-    finally:
-        conn.close()
+    return relaciones
 
 
 def obtener_personajes_detallados():

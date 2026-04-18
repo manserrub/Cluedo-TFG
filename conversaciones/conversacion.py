@@ -1,6 +1,6 @@
 import streamlit as st
-from openai import OpenAI
 from conversaciones.generarPrompt import generar_prompt
+from ai_client import get_openai_client
 
 
 def obtener_avatar(personaje):
@@ -21,7 +21,7 @@ def obtener_avatar_detective():
 
 
 def conversacion_personaje(personaje, datos, caso):
-    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+    client = get_openai_client()
 
     st.session_state.setdefault("messages_por_personaje", {})
     st.session_state.setdefault("historial_detective", [])
@@ -32,18 +32,19 @@ def conversacion_personaje(personaje, datos, caso):
     avatar_personaje = obtener_avatar(personaje)
     avatar_detective = obtener_avatar_detective()
 
-    prompt_sistema = generar_prompt(
-        personaje,
-        datos,
-        caso,
-        st.session_state.historial_detective,
-        genero_usuario
-    )
-
     if personaje not in st.session_state.messages_por_personaje:
         st.session_state.messages_por_personaje[personaje] = [
-            {"role": "system", "content": prompt_sistema},
-            {"role": "assistant", "content": f"Buenas, {tratamiento}. ¿Qué necesita saber?"}
+            {
+                "role": "system",
+                "content": generar_prompt(
+                    personaje,
+                    datos,
+                    caso,
+                    st.session_state.historial_detective,
+                    genero_usuario,
+                ),
+            },
+            {"role": "assistant", "content": f"Buenas, {tratamiento}. ¿Qué necesita saber?"},
         ]
 
     messages = st.session_state.messages_por_personaje[personaje]
@@ -69,25 +70,28 @@ def conversacion_personaje(personaje, datos, caso):
             datos,
             caso,
             st.session_state.historial_detective,
-            genero_usuario
+            genero_usuario,
         )
 
         with st.spinner(f"{personaje} está escribiendo..."):
-            response = client.chat.completions.create(
-                model="gpt-5-mini",
-                messages=messages
-            )
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-5-mini",
+                    messages=messages
+                )
+            except Exception as e:
+                st.error(f"No se pudo generar la respuesta: {str(e)}. Reintenta en unos segundos.")
+                return
 
         reply = response.choices[0].message.content
-
         messages.append({"role": "assistant", "content": reply})
+
         with st.chat_message("assistant", avatar=avatar_personaje):
             st.markdown(reply)
 
         st.session_state.historial_detective.append({
             "personaje": personaje,
             "pregunta": prompt,
-            "respuesta": reply
+            "respuesta": reply,
         })
-
         st.session_state.messages_por_personaje[personaje] = messages

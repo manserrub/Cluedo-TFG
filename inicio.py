@@ -1,14 +1,10 @@
 import streamlit as st
-import hashlib
-import re
-import database
+import auth
 
 
 def inicio():
     st.title("CLUEDO")
-
-    # Crear tabla usuarios si no existe
-    _crear_tabla_usuarios()
+    auth.crear_tabla_usuarios()
 
     st.session_state.setdefault("logueado", False)
 
@@ -26,23 +22,10 @@ def inicio():
 
 
 def _crear_tabla_usuarios():
-    conn = database.crear_conexion()
     try:
-        with conn.cursor() as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios (
-                    id SERIAL PRIMARY KEY,
-                    username VARCHAR(50) UNIQUE,
-                    email VARCHAR(100) UNIQUE,
-                    password VARCHAR(255),
-                    genero VARCHAR(10)
-                )
-            """)
-            conn.commit()
+        auth.crear_tabla_usuarios()
     except Exception as e:
         st.error(f"Error al crear la tabla usuarios: {e}")
-    finally:
-        conn.close()
 
 
 # LOGIN
@@ -57,34 +40,20 @@ def _login():
             st.error("Rellena todos los campos")
             return
 
-        hashed = hashlib.sha256(password.encode()).hexdigest()
-
-        conn = database.crear_conexion()
         try:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT username, email, genero
-                    FROM usuarios
-                    WHERE (username = %s OR email = %s) AND password = %s
-                    """,
-                    (usuario_o_email, usuario_o_email, hashed)
-                )
-                user = cur.fetchone()
-
-            if user:
-                st.session_state.logueado = True
-                st.session_state.usuario_actual = user[0]
-                st.session_state.email_actual = user[1]
-                st.session_state.genero_usuario = user[2]
-                st.session_state.pantalla = "seleccion"
-                st.rerun()
-            else:
+            user = auth.autenticar_usuario(usuario_o_email, password)
+            if not user:
                 st.error("Usuario/email o contraseña incorrectos")
+                return
+
+            st.session_state.logueado = True
+            st.session_state.usuario_actual = user["username"]
+            st.session_state.email_actual = user["email"]
+            st.session_state.genero_usuario = user["genero"]
+            st.session_state.pantalla = "seleccion"
+            st.rerun()
         except Exception as e:
             st.error(f"Error al iniciar sesión: {e}")
-        finally:
-            conn.close()
 
 
 # REGISTRO
@@ -105,42 +74,17 @@ def _registro():
             st.error("La contraseña debe tener al menos 8 caracteres")
             return
 
-        if not re.search(r"\d", password):
+        if not any(char.isdigit() for char in password):
             st.error("La contraseña debe contener al menos un número")
             return
 
-        hashed = hashlib.sha256(password.encode()).hexdigest()
-
-        conn = database.crear_conexion()
         try:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT 1
-                    FROM usuarios
-                    WHERE username = %s OR email = %s
-                    """,
-                    (usuario, email)
-                )
-
-                if cur.fetchone():
-                    st.error("El usuario o el correo ya existen")
-                    return
-
-                cur.execute(
-                    """
-                    INSERT INTO usuarios (username, email, password, genero)
-                    VALUES (%s, %s, %s, %s)
-                    """,
-                    (usuario, email, hashed, genero)
-                )
-                conn.commit()
-
+            auth.registrar_usuario(usuario, email, password, genero)
             st.success("Usuario creado correctamente. Ya puedes iniciar sesión.")
+        except ValueError as error:
+            st.error(str(error))
         except Exception as e:
             st.error(f"Error al registrar el usuario: {e}")
-        finally:
-            conn.close()
 
 def eliminar_cuenta_actual():
     usuario = st.session_state.get("usuario_actual")
@@ -150,17 +94,8 @@ def eliminar_cuenta_actual():
         st.error("No hay ninguna sesión activa.")
         return
 
-    conn = database.crear_conexion()
     try:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                DELETE FROM usuarios
-                WHERE username = %s AND email = %s
-                """,
-                (usuario, email)
-            )
-            conn.commit()
+        auth.eliminar_cuenta(usuario, email)
 
         for key in [
             "logueado", "usuario_actual", "email_actual", "genero_usuario",
@@ -174,11 +109,8 @@ def eliminar_cuenta_actual():
 
         st.session_state.pantalla = "inicio"
         st.rerun()
-
     except Exception as e:
         st.error(f"Error al eliminar la cuenta: {e}")
-    finally:
-        conn.close()
 
 def mostrar_confirmacion_borrado():
     if not st.session_state.get("mostrar_confirmacion_borrado", False):
