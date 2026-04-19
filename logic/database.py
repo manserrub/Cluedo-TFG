@@ -6,7 +6,7 @@ TABLAS_CON_NOMBRE = {
     "armas",
     "personajes",
     "victimas",
-    "habitaciones",
+    "habitaciones"
 }
 
 
@@ -108,8 +108,7 @@ def obtener_relaciones_victima(victima, participantes):
 
 
 def obtener_personajes_detallados():
-    conn = crear_conexion()
-    try:
+    with crear_conexion() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -130,5 +129,3 @@ def obtener_personajes_detallados():
                 })
 
             return personajes
-    finally:
-        conn.close()

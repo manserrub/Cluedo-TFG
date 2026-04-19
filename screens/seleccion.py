@@ -1,11 +1,11 @@
 import streamlit as st
-from database import (
+from logic.database import (
     obtener_datos,
     obtener_hora,
     obtener_personajes_detallados,
 )
-from game_logic import generar_misterio
-from inicio import mostrar_confirmacion_borrado
+from logic.game_logic import generar_misterio
+from screens.inicio import mostrar_confirmacion_borrado
 
 IMAGENES_PERSONAJES = {
     "Miss Scarlet": "assets/personajes/miss_scarlet.png",
@@ -100,7 +100,6 @@ def _mostrar_selector_personajes(personajes_detallados):
         for j, personaje in enumerate(fila):
             nombre = personaje["nombre"]
             personalidad = personaje.get("personalidad", "Sin personalidad definida")
-            forma_habla = personaje.get("forma_habla", "Sin forma de hablar definida")
             descripcion = personaje.get("descripcion", "")
 
             with cols[j]:
@@ -117,7 +116,6 @@ def _mostrar_selector_personajes(personajes_detallados):
                         st.caption(descripcion)
 
                     st.markdown(f"**Personalidad:** {personalidad}")
-                    st.markdown(f"**Forma de hablar:** {forma_habla}")
 
                     st.checkbox(
                         f"Seleccionar a {nombre}",

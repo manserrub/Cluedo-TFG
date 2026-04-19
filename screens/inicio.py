@@ -1,5 +1,5 @@
 import streamlit as st
-import auth
+import logic.auth as auth
 
 
 def inicio():
@@ -8,7 +8,6 @@ def inicio():
 
     st.session_state.setdefault("logueado", False)
 
-    # Si ya está logueado → ir a selección
     if st.session_state.logueado:
         st.session_state.pantalla = "seleccion"
         st.rerun()
@@ -19,13 +18,6 @@ def inicio():
         _login()
     else:
         _registro()
-
-
-def _crear_tabla_usuarios():
-    try:
-        auth.crear_tabla_usuarios()
-    except Exception as e:
-        st.error(f"Error al crear la tabla usuarios: {e}")
 
 
 # LOGIN

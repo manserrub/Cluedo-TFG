@@ -1,9 +1,9 @@
 import streamlit as st
 import random
-from database import obtener_datos
-from conversaciones.conversacion import conversacion_personaje
-from inicio import mostrar_confirmacion_borrado
-from game_logic import resolver_acusacion
+from logic.database import obtener_datos
+from conversations.conversacion import conversacion_personaje
+from screens.inicio import mostrar_confirmacion_borrado
+from logic.game_logic import resolver_acusacion
 
 def limpiar_cuaderno():
     st.session_state.cuaderno_notas = ""

@@ -1,6 +1,6 @@
 import re
 import bcrypt
-from database import crear_conexion
+from logic.database import crear_conexion
 
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 

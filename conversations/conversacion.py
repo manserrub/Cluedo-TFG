@@ -1,6 +1,6 @@
 import streamlit as st
-from conversaciones.generarPrompt import generar_prompt
-from ai_client import get_openai_client
+from conversations.generarPrompt import generar_prompt
+from logic.ai_client import get_openai_client
 
 
 def obtener_avatar(personaje):
@@ -9,7 +9,7 @@ def obtener_avatar(personaje):
         "Coronel Mustard": "🎖️",
         "Señora Peacock": "🦚",
         "Señora White": "🤍",
-        "Señor Green": "💚",
+        "Señor Green": "✝️",
         "Profesor Plum": "🎓"
     }
     return avatares.get(personaje, "🔍")

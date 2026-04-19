@@ -1,8 +1,8 @@
 import streamlit as st
-from inicio import inicio
-from juego import juego
-from seleccion import seleccion
-from estilos import aplicar_estilos
+from screens.inicio import inicio
+from screens.juego import juego
+from screens.seleccion import seleccion
+from logic.estilos import aplicar_estilos
 
 st.set_page_config(
     page_title="CLUEDO",

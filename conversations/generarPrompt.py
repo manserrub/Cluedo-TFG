@@ -1,4 +1,4 @@
-from database import obtener_personalidad, obtener_relaciones_victima
+from logic.database import obtener_personalidad, obtener_relaciones_victima
 
 
 def generar_prompt(nombre, datos, caso, historial_detective, genero_usuario="chico"):

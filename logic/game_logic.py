@@ -1,5 +1,5 @@
 import random
-from database import obtener_personalidad
+from logic.database import obtener_personalidad, obtener_datos
 
 
 def generar_misterio(seleccion_jugadores, datos):
@@ -125,12 +125,14 @@ def _generar_pistas_por_foco(caso, foco, sospechoso):
 
 
 def _pista_falsa(caso):
+    habitaciones = obtener_datos("habitaciones")
+    armas = obtener_datos("armas")
     habitaciones_falsas = [
-        lugar for lugar in ["Cocina", "Salon de baile", "Comedor", "Terraza", "Sala de billar", "Biblioteca", "Salon", "Pasillo" ,"Estudio"]
+        lugar for lugar in habitaciones
         if lugar != caso["habitacion"]
     ]
     armas_falsas = [
-        arma for arma in ["Soga", "Daga", "Tuberia de plomo", "Revolver", "Candelabro","Llave inglesa"]
+        arma for arma in armas
         if arma != caso["arma"]
     ]
     if not habitaciones_falsas and not armas_falsas:
