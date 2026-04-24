@@ -1,5 +1,5 @@
 import streamlit as st
-from conversations.generarPrompt import generar_prompt
+from logic.conversations.generarPrompt import generar_prompt
 from logic.ai_client import get_openai_client
 
 
@@ -16,8 +16,8 @@ def obtener_avatar(personaje):
 
 
 def obtener_avatar_detective():
-    genero = st.session_state.get("genero_usuario", "chico")
-    return "🕵️‍♂️" if genero == "chico" else "🕵️‍♀️"
+    genero = st.session_state.get("genero_usuario", "Hombre")
+    return "🕵️‍♀️" if genero == "Mujer" else "🕵️‍♂️"
 
 
 def conversacion_personaje(personaje, datos, caso):
@@ -26,8 +26,8 @@ def conversacion_personaje(personaje, datos, caso):
     st.session_state.setdefault("messages_por_personaje", {})
     st.session_state.setdefault("historial_detective", [])
 
-    genero_usuario = st.session_state.get("genero_usuario", "chico")
-    tratamiento = "señor detective" if genero_usuario == "chico" else "señorita detective"
+    genero_usuario = st.session_state.get("genero_usuario", "Hombre")
+    tratamiento = "señorita detective" if genero_usuario == "Mujer" else "señor detective"
 
     avatar_personaje = obtener_avatar(personaje)
     avatar_detective = obtener_avatar_detective()

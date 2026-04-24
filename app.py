@@ -1,7 +1,7 @@
 import streamlit as st
-from screens.inicio import inicio
-from screens.juego import juego
-from screens.seleccion import seleccion
+from pantallas.inicio import inicio
+from pantallas.juego import juego
+from pantallas.seleccion import seleccion
 from logic.estilos import aplicar_estilos
 
 st.set_page_config(

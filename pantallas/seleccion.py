@@ -5,7 +5,7 @@ from logic.database import (
     obtener_personajes_detallados,
 )
 from logic.game_logic import generar_misterio
-from screens.inicio import mostrar_confirmacion_borrado
+from pantallas.inicio import mostrar_confirmacion_borrado
 
 IMAGENES_PERSONAJES = {
     "Miss Scarlet": "assets/personajes/miss_scarlet.png",

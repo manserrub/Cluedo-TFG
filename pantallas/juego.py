@@ -1,8 +1,8 @@
 import streamlit as st
 import random
 from logic.database import obtener_datos
-from conversations.conversacion import conversacion_personaje
-from screens.inicio import mostrar_confirmacion_borrado
+from logic.conversations.conversacion import conversacion_personaje
+from pantallas.inicio import mostrar_confirmacion_borrado
 from logic.game_logic import resolver_acusacion
 
 def limpiar_cuaderno():
@@ -103,7 +103,6 @@ def juego():
             st.rerun()
         mostrar_confirmacion_borrado()
 
-    st.caption(f"Investiga la muerte de **{caso['victima']}**. Interroga a los sospechosos y resuelve el caso.")
 
     if st.session_state.partida_terminada:
         st.info("La investigación ha concluido. Puedes revisar las conversaciones, pero no continuar los interrogatorios.")
@@ -112,43 +111,3 @@ def juego():
     choice = st.selectbox("¿Con quién quieres hablar?", nombres)
     st.divider()
     conversacion_personaje(choice, personajes[choice], caso)
-
-def _resolver_acusacion(acusado, arma, habitacion, caso):
-    acierto_asesino = acusado == caso["asesino"]
-    acierto_arma = arma.lower() in caso["arma"].lower() or caso["arma"].lower() in arma.lower()
-    acierto_habitacion = (
-        habitacion.lower() in caso["habitacion"].lower()
-        or caso["habitacion"].lower() in habitacion.lower()
-    )
-
-    if acierto_asesino and acierto_arma and acierto_habitacion:
-        st.session_state.partida_terminada = True
-        st.balloons()
-        st.success(
-            f"🎉 ¡Correcto! {caso['asesino']} mató a {caso['victima']} "
-            f"con {caso['arma']} en {caso['habitacion']}."
-        )
-        return
-
-    st.session_state.intentos_acusacion -= 1
-
-    errores = []
-    if not acierto_asesino:
-        errores.append("el asesino")
-    if not acierto_arma:
-        errores.append("el arma")
-    if not acierto_habitacion:
-        errores.append("la habitación")
-
-    if st.session_state.intentos_acusacion > 0:
-        st.error(
-            f"❌ Acusación incorrecta. Te has equivocado en: {', '.join(errores)}. "
-            f"Te quedan {st.session_state.intentos_acusacion} oportunidades."
-        )
-    else:
-        st.session_state.partida_terminada = True
-        st.error(
-            f"❌ Has agotado tus 3 oportunidades.\n"
-            f"La solución era: {caso['asesino']} mató a {caso['victima']} "
-            f"con {caso['arma']} en {caso['habitacion']}."
-        )

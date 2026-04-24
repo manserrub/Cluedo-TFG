@@ -1,5 +1,5 @@
 import random
-from logic.database import obtener_personalidad, obtener_datos
+from logic.database import obtener_datos
 
 
 def generar_misterio(seleccion_jugadores, datos):
@@ -40,7 +40,6 @@ def _crear_roles_partida(seleccion_jugadores, caso, habitaciones):
     inocentes_con_sospecha_real = set(random.sample(inocentes, k=min(2, len(inocentes)))) if inocentes else set()
 
     for personaje in seleccion_jugadores:
-        datos_personaje = obtener_personalidad(personaje)
 
         if personaje == asesino:
             personajes_data[personaje] = _crear_datos_asesino(
