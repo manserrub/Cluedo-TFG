@@ -1,7 +1,10 @@
+from openai import OpenAI
 import streamlit as st
 from logic.conversations.generarPrompt import generar_prompt
-from logic.ai_client import get_openai_client
 
+@st.cache_resource
+def get_openai_client():
+    return OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 def obtener_avatar(personaje):
     avatares = {

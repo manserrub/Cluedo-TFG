@@ -79,6 +79,18 @@ def juego():
                     st.error(resultado["mensaje"])
 
         st.divider()
+        st.markdown("### ⚠️ Cuenta")
+
+        st.sidebar.write(f"👤 {st.session_state.usuario_actual}")
+        if st.session_state.get("email_actual"):
+            st.sidebar.write(f"📧 {st.session_state.email_actual}")
+
+        if st.button("🗑️ Borrar cuenta", width='stretch'):
+            st.session_state.mostrar_confirmacion_borrado = True
+            st.rerun()
+        mostrar_confirmacion_borrado()
+
+        st.divider()
 
         if st.button("🔄 Nueva partida", width='stretch'):
             for key in [
@@ -90,18 +102,6 @@ def juego():
                 st.session_state.pop(key, None)
             st.session_state.pantalla = "seleccion"
             st.rerun()
-
-        st.divider()
-        st.markdown("### ⚠️ Cuenta")
-
-        st.sidebar.write(f"👤 {st.session_state.usuario_actual}")
-        if st.session_state.get("email_actual"):
-            st.sidebar.write(f"📧 {st.session_state.email_actual}")
-
-        if st.button("🗑️ Borrar cuenta", width='stretch'):
-            st.session_state.mostrar_confirmacion_borrado = True
-            st.rerun()
-        mostrar_confirmacion_borrado()
 
 
     if st.session_state.partida_terminada:

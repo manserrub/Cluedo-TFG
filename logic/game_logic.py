@@ -43,7 +43,6 @@ def _crear_roles_partida(seleccion_jugadores, caso, habitaciones):
 
         if personaje == asesino:
             personajes_data[personaje] = _crear_datos_asesino(
-                caso=caso,
                 habitacion_coartada=habitacion_coartada,
                 chivo_expiatorio=chivo_expiatorio,
             )
@@ -62,7 +61,7 @@ def _crear_roles_partida(seleccion_jugadores, caso, habitaciones):
     return personajes_data
 
 
-def _crear_datos_asesino(caso, habitacion_coartada, chivo_expiatorio):
+def _crear_datos_asesino(habitacion_coartada, chivo_expiatorio):
     tema_sensible = random.choice(["arma", "habitacion", "hora", "victima"])
     return {
         "rol": "asesino",
@@ -145,11 +144,8 @@ def _pista_falsa(caso):
 
 def resolver_acusacion(acusado, arma, habitacion, caso, intentos_restantes):
     acierto_asesino = acusado == caso["asesino"]
-    acierto_arma = arma.lower() in caso["arma"].lower() or caso["arma"].lower() in arma.lower()
-    acierto_habitacion = (
-        habitacion.lower() in caso["habitacion"].lower()
-        or caso["habitacion"].lower() in habitacion.lower()
-    )
+    acierto_arma = arma == caso["arma"] 
+    acierto_habitacion = habitacion == caso["habitacion"]
 
     if acierto_asesino and acierto_arma and acierto_habitacion:
         return {

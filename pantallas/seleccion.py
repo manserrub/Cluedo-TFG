@@ -27,15 +27,15 @@ def seleccion():
         st.session_state.datos_partida = _cargar_datos_partida()
 
     datos = st.session_state.datos_partida
-    st.write("Selecciona al menos 2 personajes para comenzar.")
+    st.write("Selecciona al menos 3 personajes para comenzar.")
 
     seleccion_jugadores = _mostrar_selector_personajes(datos["personajes_detallados"])
 
     st.divider()
 
     if st.button("Comenzar partida", type="primary", width='stretch'):
-        if len(seleccion_jugadores) < 2:
-            st.error("Debes elegir al menos 2 personajes")
+        if len(seleccion_jugadores) < 3:
+            st.error("Debes elegir al menos 3 personajes")
             return
 
         caso, personajes_data = generar_misterio(seleccion_jugadores, datos)
@@ -103,7 +103,7 @@ def _mostrar_selector_personajes(personajes_detallados):
             descripcion = personaje.get("descripcion", "")
 
             with cols[j]:
-                with st.container(border=True):
+                with st.container(border=True,width='stretch', height='stretch'):
                     ruta_imagen = IMAGENES_PERSONAJES.get(nombre)
                     if ruta_imagen:
                         st.image(ruta_imagen, width='stretch')
