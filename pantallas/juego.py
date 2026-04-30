@@ -85,6 +85,18 @@ def juego():
         if st.session_state.get("email_actual"):
             st.sidebar.write(f"📧 {st.session_state.email_actual}")
 
+        if st.button("Cerrar sesión", width='stretch'):
+            for key in [
+                "logueado", "usuario_actual", "email_actual", "genero_usuario",
+                "pantalla", "caso", "personajes",
+                "messages_por_personaje", "historial_detective",
+                "cuaderno_notas", "intentos_acusacion", "partida_terminada",
+                "datos_partida", "mostrar_confirmacion_borrado",
+                "personajes_seleccionados"
+            ]:
+                st.session_state.pop(key, None)
+            st.rerun()
+
         if st.button("🗑️ Borrar cuenta", width='stretch'):
             st.session_state.mostrar_confirmacion_borrado = True
             st.rerun()

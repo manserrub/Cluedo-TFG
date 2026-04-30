@@ -24,14 +24,9 @@ def aplicar_estilos():
     h1 {
         font-size: 2.5rem;
     }
-                
-    div[data-testid="stVerticalBlock"] {
-        gap: 0.4rem;
-    }
-                
+                      
     .block-container {
         max-width: 1000px;
-        padding-top: 2rem;
         padding-left: 2rem;
         padding-right: 2rem;
     }

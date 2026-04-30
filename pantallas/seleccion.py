@@ -119,7 +119,7 @@ def _mostrar_selector_personajes(personajes_detallados):
 
                     st.checkbox(
                         f"Seleccionar a {nombre}",
-                        key=f"check_{nombre}",
+                        key=f"check_{nombre}",width='stretch'
                     )
 
     return [
