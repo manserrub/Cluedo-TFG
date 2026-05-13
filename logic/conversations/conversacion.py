@@ -95,6 +95,6 @@ def conversacion_personaje(personaje, datos, caso):
         st.session_state.historial_detective.append({
             "personaje": personaje,
             "pregunta": prompt,
-            "respuesta": reply,
+            "respuesta": reply
         })
         st.session_state.messages_por_personaje[personaje] = messages
