@@ -6,10 +6,6 @@ Una aplicación interactiva basada en el clásico juego de Cluedo, desarrollada 
 
 CLUEDO es una versión digital del juego de mesa tradicional donde debes resolver un misterio identificando al culpable, el arma utilizada y la ubicación del crimen. La aplicación utiliza tecnología de IA para generar dinámicamente pistas y gestionar la lógica del juego.
 
-## 📱 Aplicación Desplegada
-
-La aplicación está disponible en vivo en:
-**[https://cluedo-manserrub.streamlit.app/](https://cluedo-manserrub.streamlit.app/)**
 
 ## 💻 Requisitos Previos
 
